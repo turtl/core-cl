@@ -1,0 +1,9 @@
+Move the following from your ecl install folder here:
+
+- cmp.fas
+- sb-bsd-sockets.fas
+- sockets.fas
+
+You probably don't need the corresponding .asd files, but if you have problems
+then GO AHEAD and put them here as well.
+

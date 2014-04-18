@@ -1,0 +1,11 @@
+*.dll
+*.exe
+*.o
+*.fas
+*.fasc
+*.doc
+asdf/systems
+asdf/registry
+asdf/cache
+!asdf/registry/generate.sh
+
