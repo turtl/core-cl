@@ -6,6 +6,6 @@
 *.doc
 asdf/systems
 asdf/registry
-asdf/cache
 !asdf/registry/generate.sh
+asdf/cache
 

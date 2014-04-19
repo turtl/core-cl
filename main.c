@@ -9,6 +9,7 @@ void turtl_init()
 	// this will boot our app
 	res	=	si_safe_eval(3, c_string_to_object("\
 		(progn\
+		  (ext:set-limit 'ext:lisp-stack (expt 2 19))\
 		  (handler-case (load \"src/loader\") (t (e) (format t \"error: ~a~%\" e))))\
 	"), Cnil, OBJNULL);
 	if(res == OBJNULL)

@@ -1,9 +1,10 @@
 #!/bin/bash
 
-export PATH=/d/MinGW/bin:$PATH
+export PATH=/c/dev/MinGW/bin:$PATH
+ECL=/c/usr/local/ecl
 CC=gcc
-ECL_CONFIG=/d/usr/local/ecl/ecl-config
-CFLAGS="`$ECL_CONFIG --cflags`"
+ECL_CONFIG=$ECL/ecl-config
+CFLAGS="-I${ECL} -L${ECL} `$ECL_CONFIG --cflags`"
 LDFLAGS="`$ECL_CONFIG --ldflags`"
 
 $CC \
