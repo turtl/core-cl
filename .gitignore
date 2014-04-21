@@ -4,6 +4,7 @@
 *.fas
 *.fasc
 *.doc
+*.log
 asdf/systems
 asdf/registry
 !asdf/registry/generate.sh

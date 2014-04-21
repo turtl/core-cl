@@ -20,11 +20,10 @@
 (unless (fboundp 'cffi::%close-foreign-library)
   (defun cffi::%close-foreign-library (&rest args) (declare (ignore args))))
 
-(format t "~%~%")
-(format t "Turtl loaded.~%")
-
 ;; -----------------------------------------------------------------------------
 ;; start the app
 ;; -----------------------------------------------------------------------------
+(format t "~%~%")
+(format t "Turtl loaded.~%")
 (turtl-core:start)
 
