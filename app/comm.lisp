@@ -1,58 +1,24 @@
 (in-package :turtl-core)
 
-(defvar *events* nil
-  "Holds all pending events.")
-(defvar *events-lock* (bt:make-lock "event-lock"))
+(defun trigger-remote (event)
+  "Send an event to our UI thread."
+  (let ((str (with-output-to-string (s) (yason:encode event s))))
+    (send-remote str)))
 
-(defparameter *handlers* (make-hash-table :test #'eq)
-  "Holds all event handlers.")
-
-(defun normalize-event-name (event)
-  "Turn an event name into a keyword."
-  (cond ((keywordp event)
-         event)
-        ((symbolp event)
-         (intern (string event) :keyword))
-        ((stringp event)
-         (intern (string-upcase (cl-ppcre:regex-replace-all "_" event "-")) :keyword))
-        (t
-         (error (format nil "Bad event name: ~a" event)))))
-
-(defun dispatch-event (name args)
-  "Blast out an event triggered to any listening handlers."
-  (let ((handlers (gethash (normalize-event-name name) *handlers*)))
-    (dolist (handler handlers)
-      (apply handler args))))
-
-(defun event-handler ()
-  "Do a threadsafe copy of all pending events, wipe pending events, and process
-   what we copied event-by-event."
-  (declare (optimize (speed 3) (safety 1)))
-  (format t "hai~%")
-  (let ((events nil))
-    (bt:with-lock-held (*events-lock*)
-      (when *events*
-        (setf events (copy-tree *events*)
-              *events* nil)))
-    (dolist (event (nreverse events))
-      (apply 'trigger (append (list (getf event :name))
-                              (getf event :args))))))
-
-(defun trigger (event &rest args)
-  "Trigger a local event."
-  (dispatch-event event args))
-
-(defun trigger-remote (event &rest args)
+(defun send-remote (str)
   "Trigger an event in the remote process (ie, non-lisp). Used to communicate
    between lisp and whatever GUI system is wrapping it (Webkit, Android, iOS)."
-  ;; TODO will probably depend on GUI thread and what's running there.
-  )
+  (format t "lisp: send-remote (~a): ~a~%" (length str) str)
+  (handler-case
+    (let* ((bytes (babel:string-to-octets str :encoding :utf-8))
+           (size (length bytes)))
+      (cffi:with-foreign-object (c-msg :char size)
+        (dotimes (i size)
+          (setf (cffi:mem-aref c-msg :char i) (aref bytes i)))
+        (msg-to-ui size c-msg)))
+    (t (e) (format t "send-remote: err: ~a~%" e))))
 
-(defun bind (event function)
-  "Locally bind a function to an event. The function will be called whenever the
-   event is triggered."
-  (push function (gethash (normalize-event-name event) *handlers*)))
-
-;; TODO
-;(defun bind-remote ())
+(defun bind-remote-message-handler ()
+  "Registers our lisp message handler."
+  (set-lisp-msg-handler (cffi:callback msg-from-ui)))
 

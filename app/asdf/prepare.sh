@@ -14,4 +14,13 @@ for f in `find $SYSTEM_PATH -name "*.asd"`; do
 done
 popd > /dev/null
 
+read -r -d '' README <<'EOF'
+Place the following Common Lisp packages in this directory:
+EOF
 
+echo "$README" > systems/README
+echo >> systems/README
+
+for x in `ls systems`; do
+	echo "$x" >> systems/README
+done
