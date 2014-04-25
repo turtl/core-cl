@@ -3,7 +3,7 @@ ECL=/c/usr/local/ecl
 CFLAGS=-I$(ECL)
 LDFLAGS=-L$(ECL) -lecl
 
-EXEFILE=test.exe
+EXEFILE=ecl-test.exe
 
 exe: CFLAGS := -DEXE $(CFLAGS)
 
@@ -16,10 +16,11 @@ dll: main.o
 lib: dll
 
 	lib /machine:i386 /def:turtl.def
+	mv turtl.lib ..
 
 exe: main.o
 
-	$(CC) main.o -o ../$(EXEFILE) $(LDFLAGS)
+	$(CC) main.o -o ../test/$(EXEFILE) $(LDFLAGS)
 
 main.o:
 
@@ -31,5 +32,5 @@ clean:
 
 remove:
 
-	rm -f ../turtl.dll ../$(EXEFILE) ../turtl.lib
+	rm -f ../turtl.dll ../test/$(EXEFILE) ../turtl.lib
 
