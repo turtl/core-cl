@@ -7,7 +7,7 @@
 	#define TURTL_CONV __cdecl
 #else
 	#define TURTL_EXPORT extern
-	#define TURTL_CONV
+	#define TURTL_CONV __cdecl
 #endif
 
 #ifdef __cplusplus
@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Start our lisp process, do any needed setup, and load our main lisp app.
  */
-TURTL_EXPORT void TURTL_CONV turtl_init();
+TURTL_EXPORT int TURTL_CONV turtl_init();
 
 /**
  * Shutdown the lisp world.
@@ -28,27 +28,27 @@ TURTL_EXPORT void TURTL_CONV turtl_shutdown();
  * Initialize our (empty) message callback functions. These are used to register
  * message passing callbacks between our lisp and UI worlds.
  */
-typedef void (*msg_callback)(unsigned long long, char *);
+typedef void (*turtl_msg_callback_t)(unsigned long, const char *);
 
 /**
  * Set our lisp message handler
  */
-TURTL_EXPORT void TURTL_CONV turtl_set_lisp_msg_handler(msg_callback callback);
+TURTL_EXPORT void TURTL_CONV turtl_set_lisp_msg_handler(turtl_msg_callback_t callback);
 
 /**
  * Set our UI message handler
  */
-TURTL_EXPORT void TURTL_CONV turtl_set_ui_msg_handler(msg_callback callback);
+TURTL_EXPORT void TURTL_CONV turtl_set_ui_msg_handler(turtl_msg_callback_t callback);
 
 /**
  * Pass a message from UI to lisp
  */
-TURTL_EXPORT void TURTL_CONV turtl_msg_to_lisp(unsigned long long msg_length, char *msg);
+TURTL_EXPORT void TURTL_CONV turtl_msg_to_lisp(unsigned long msg_length, const char *msg);
 
 /**
  * Pass a message from lisp to UI
  */
-TURTL_EXPORT void TURTL_CONV turtl_msg_to_ui(unsigned long long msg_length, char *msg);
+TURTL_EXPORT void TURTL_CONV turtl_msg_to_ui(unsigned long msg_length, const char *msg);
 
 #ifdef __cplusplus
 }		// extern "C" { ... }
