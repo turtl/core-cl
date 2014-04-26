@@ -12,6 +12,7 @@ all: dll
 dll: main.o
 
 	$(CC) -shared -o ../turtl.dll main.o -Wl,--output-def,turtl.def $(LDFLAGS)
+	strip ../turtl.dll
 
 lib: dll
 
