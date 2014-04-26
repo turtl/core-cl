@@ -1,17 +1,47 @@
-var turtl = require('turtl');
+var TurtlEvent	=	require('../TurtlEvent');
 
-(function() {
-	turtl.set_msg_callback(function(msg) {
-		var ev	=	JSON.parse(msg);
-		console.log('js: recv: ', ev);
-	});
+var test_response	=	function()
+{
+	var Event	=	new TurtlEvent.Event();
+	var Remote	=	new TurtlEvent.Remote();
 
-	turtl.start();
+	// pipe remote events into local trigger
+	Remote.bind(Event.trigger);
 
 	var send_ping	=	function()
 	{
-		var msg	=	{ev: 'ping'};
-		turtl.send_msg_lisp(JSON.stringify(msg));
+		Remote.send({ev: 'ping'}, function(event) {
+			console.log('js: got response: ', event);
+			setTimeout(send_ping, 4000);
+		});
 	};
+
+	TurtlEvent.start();
+
 	setTimeout(send_ping, 100);
-})();
+};
+
+var test_bind	=	function()
+{
+	var Event	=	new TurtlEvent.Event();
+	var Remote	=	new TurtlEvent.Remote();
+
+	// pipe remote events into local trigger
+	Remote.bind(Event.trigger);
+
+	var send_ping	=	function()
+	{
+		Remote.send({ev: 'ping'});
+	};
+
+	Event.bind('pong', function(event) {
+		setTimeout(send_ping, 4000);
+	});
+
+	TurtlEvent.start();
+
+	setTimeout(send_ping, 100);
+};
+
+test_response();
+
