@@ -1,5 +1,7 @@
 (in-package :turtl-core)
 
+(setf *random-state* (make-random-state t))
+
 (defvar *run* t
   "Whether or not we should be running.")
 (defvar *run-lock* (bt:make-lock "run")
@@ -23,9 +25,8 @@
   (unwind-protect
     (as:with-event-loop (:catch-app-errors t)
       (main-event-loop)
-      (with-bind ("ping" event)
-        (as:with-delay (.4)
-          (trigger-remote (make-event "pong"))))
+      (with-bind ("ping" event respond)
+        (respond (make-event "pong")))
       (as:signal-handler 2
         (lambda (sig)
           (declare (ignore sig))

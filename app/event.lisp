@@ -8,8 +8,13 @@
 (defparameter *handlers* (make-hash-table :test #'equal)
   "Holds all event handlers.")
 
+(defparameter *responses* (make-hash-table :test #'equal)
+  "Holds all event -> response function mappings.")
+
 (defclass event ()
-  ((ev :accessor ev :initarg :ev :initform nil
+  ((id :accessor id :initarg :id :initform nil
+     :documentation "Holds the event's UUID.")
+   (ev :accessor ev :initarg :ev :initform nil
      :documentation "The event's name.")
    (data :accessor data :initarg :data :initform nil
      :documentation "Arbitrary data attached to the event. Usually a set of args.")
@@ -18,10 +23,11 @@
   (:documentation
     "Describes an event and any data it holds."))
 
-(defun make-event (name &key data meta)
+(defun make-event (name &key data meta uuid)
   "Easy wrapper for creating a standard event object. Meta is a plist of
-   optional data to set (top-level) into the event object."
-  (let ((event (make-instance 'event :ev name :data data)))
+   optional data to set (top-level) into the event object. Also allows
+   specifying the event's UUID."
+  (let ((event (make-instance 'event :id uuid :ev name :data data)))
     (when meta
       (loop for (k v) on meta by #'cddr do
         (setf (gethash (string-downcase (string k)) (meta event)) v)))
@@ -31,6 +37,8 @@
   (yason:with-output (stream)
     (yason:with-object ()
       (yason:encode-object-element "ev" (ev event))
+      (when (id event)
+        (yason:encode-object-element "id" (id event)))
       (when (data event)
         (yason:encode-object-element "data" (data event)))
       (let ((meta (meta event)))
@@ -43,7 +51,9 @@
   (let ((event (make-instance 'event)))
     (loop for k being the hash-keys of hash
           for v being the hash-values of hash do
-      (cond ((string= k "ev")
+      (cond ((string= k "id")
+             (setf (id event) v))
+            ((string= k "ev")
              (setf (ev event) v))
             ((string= k "data")
              (setf (data event) v))
@@ -52,12 +62,17 @@
     event))
 
 (defun dispatch-event (event)
-  "Blast out an event triggered to any listening handlers."
+  "Blast out an event, triggering any corresponding listening handlers."
   (let* ((name (ev event))
-         (handlers (gethash name *handlers*)))
+         (handlers (gethash name *handlers*))
+         ;; if they want to send a response
+         (response-fn (lambda (revent)
+                        ;; overwrite the response event's ID with the original
+                        (setf (id revent) (id event))
+                        (trigger-remote revent))))
     (when handlers
       (dolist (handler handlers)
-        (funcall handler event)))))
+        (funcall handler event response-fn)))))
 
 (defun trigger (event)
   "Trigger a local event."
@@ -68,12 +83,15 @@
    event is triggered."
   (push function (gethash event *handlers*)))
 
-(defmacro with-bind ((event event-bind) &body body)
+(defmacro with-bind ((event event-bind &optional (send-response-bind (gensym "send-response-bind"))) &body body)
   "Nicer syntax for bind function."
-  `(bind ,event
-     (lambda (,event-bind)
-       (declare (ignorable ,event-bind))
-       ,@body)))
+  (let ((response-fn-bind (gensym "response-fn-bind")))
+    `(bind ,event
+       (lambda (,event-bind ,response-fn-bind)
+         (declare (ignorable ,event-bind))
+         (flet ((,send-response-bind (event)
+                   (funcall ,response-fn-bind event)))
+           ,@body)))))
 
 (defun event-handler ()
   "Do a threadsafe copy of all pending events, wipe pending events, and process
