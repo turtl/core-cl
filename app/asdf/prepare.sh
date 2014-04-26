@@ -21,6 +21,6 @@ EOF
 echo "$README" > systems/README
 echo >> systems/README
 
-for x in `ls systems`; do
+for x in `ls systems | grep -v README`; do
 	echo "$x" >> systems/README
 done
