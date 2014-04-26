@@ -1,9 +1,0 @@
-Move the following from your ecl install folder here:
-
-- cmp.asd
-- cmp.fas
-- sb-bsd-sockets.asd
-- sb-bsd-sockets.fas
-- sockets.asd
-- sockets.fas
-
