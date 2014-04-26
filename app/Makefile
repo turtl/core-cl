@@ -1,8 +1,8 @@
 ECL=/usr/local/ecl/ecl.exe
 
-all: turtl-pkg
+all: pkg
 
-turtl-pkg:
+pkg:
 
 	$(ECL) \
 		-norc \
@@ -14,6 +14,21 @@ turtl-pkg:
 
 	mv turtl-pkg--all-systems.fasb turtl-pkg.fas
 	strip turtl-pkg.fas
+
+core: pkg
+
+	$(ECL) \
+		-norc \
+		-eval '(require :asdf)' \
+		-eval '(ext:install-c-compiler)' \
+		-eval '(setf asdf:*central-registry* (list "./"))' \
+		-eval '(defpackage :sb-bsd-sockets)' \
+		-eval '(load "turtl-pkg.fas")' \
+		-eval '(asdf:make-build :turtl-core :type :fasl :monolithic t :move-here "./")' \
+		-eval '(quit)'
+
+	mv turtl-core--all-systems.fasb turtl-core.fas
+	strip turtl-core.fas
 
 clean:
 
