@@ -8,9 +8,6 @@
 (defparameter *handlers* (make-hash-table :test #'equal)
   "Holds all event handlers.")
 
-(defparameter *responses* (make-hash-table :test #'equal)
-  "Holds all event -> response function mappings.")
-
 (defclass event ()
   ((id :accessor id :initarg :id :initform nil
      :documentation "Holds the event's UUID.")
