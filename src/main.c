@@ -33,7 +33,7 @@ TURTL_EXPORT int TURTL_CONV turtl_init()
 	}
 
 	turtl_running = 1;
-	//atexit(turtl_shutdown);
+	atexit(turtl_shutdown);
 
 	// this will boot our app
 	evalres = si_safe_eval(3, c_string_to_object("\
