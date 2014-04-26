@@ -39,8 +39,6 @@ TURTL_EXPORT int TURTL_CONV turtl_init()
 	evalres = si_safe_eval(3, c_string_to_object("\
 		(progn\
 		  (si::trap-fpe t nil)\
-		  (ext:set-limit 'ext:c-stack (expt 2 18))\
-		  (ext:set-limit 'ext:lisp-stack (expt 2 19))\
 		  (handler-case (load \"app/loader\") (t (e) (format t \"error: ~a~%\" e))))\
 	"), Cnil, OBJNULL);
 	if(evalres == OBJNULL)
