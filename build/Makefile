@@ -1,6 +1,6 @@
 CC=gcc
 ECL=/c/usr/local/ecl
-CFLAGS=-I$(ECL)
+CFLAGS=-I$(ECL) $$($(ECL)/ecl-config --cflags)
 LDFLAGS=-L$(ECL) -lecl
 
 EXEFILE=ecl-test.exe
