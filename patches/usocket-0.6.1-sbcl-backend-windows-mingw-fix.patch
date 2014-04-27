@@ -1,0 +1,20 @@
+--- backend/sbcl.lisp	2014-04-26 19:57:31 -0700
++++ backend/sbcl.lisp.mingw-fix	2014-04-27 11:05:40 -0700
+@@ -690,7 +690,7 @@
+ 
+ ) ; progn
+ 
+-#+(and ecl (not win32))
++#+(and ecl (or (not win32) mingw32))
+ (progn
+   (defun wait-for-input-internal (wl &key timeout)
+     (with-mapped-conditions ()
+@@ -714,7 +714,7 @@
+     (declare (ignore wl w)))
+ ) ; progn
+ 
+-#+(and ecl win32 (not ecl-bytecmp))
++#+(and ecl (and win32 (not mingw32)) (not ecl-bytecmp))
+ (progn
+   (defun maybe-wsa-error (rv &optional syscall)
+     (unless (zerop rv)

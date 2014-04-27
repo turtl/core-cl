@@ -1,0 +1,10 @@
+This is a set of patches, mainly for windows, that fix things that are broken.
+
+For instance, Node-gyp forces you to use the windows stack to build things,
+however node.js doesn't build on the windows stack. The node.h patch is applied
+to ~/.node-gyp/v0.xx.x/src/node.h to fix the build.
+
+Also, on windows, usocket doesn't like to build in ECL. The included patch makes
+it take the MinGW32 system into account (and not depend on a number of Windows
+headers that MinGW abtracts away).
+

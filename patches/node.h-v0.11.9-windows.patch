@@ -1,0 +1,11 @@
+--- node.h	2014-04-27 11:10:02 -0700
++++ node.h.windows	2014-04-27 11:09:40 -0700
+@@ -23,6 +23,8 @@
+ #define SRC_NODE_H_
+ 
+ #ifdef _WIN32
++#include <STDDEF.H>
++typedef intptr_t ssize_t;
+ # ifndef BUILDING_NODE_EXTENSION
+ #   define NODE_EXTERN __declspec(dllexport)
+ # else
