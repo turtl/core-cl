@@ -2,6 +2,7 @@
 *.lib
 *.exe
 *.o
+*.so
 *.fas
 *.fasc
 *.doc
