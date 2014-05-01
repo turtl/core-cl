@@ -1,0 +1,154 @@
+#!/bin/bash
+
+# This file creates the necessary Makefiles for building Turtl core for your
+# platform.
+
+ECL_BIN_PATH=""
+ECL_INC_PATH=""
+ECL_LIB_PATH=""
+NW_TARGET=0.9.2
+
+function guess_ecl_bin_path {
+	if [ "$ECL_BIN_PATH" != "" ]; then
+		return
+	fi
+
+	ECL_WHICH=`which ecl 2> /dev/null`
+	if [ "$ECL_WHICH" != "" ]; then
+		ECL_BIN_PATH=`dirname $ECL_WHICH`
+		return
+	fi
+
+	CHECK=("/usr/local/ecl/bin/ecl" "/opt/ecl/bin/ecl" "/usr/local/ecl/ecl.exe" "/c/usr/local/ecl/ecl.exe" "/d/usr/local/ecl/ecl.exe")
+	for i in "${CHECK[@]}"; do
+		if [ -x $i ]; then
+			ECL_BIN_PATH=`dirname $i`
+			return
+		fi
+	done
+}
+
+function guess_ecl_include_path {
+	if [ "$ECL_INC_PATH" != "" ]; then
+		return
+	fi
+
+	if [ "$ECL_BIN_PATH" == "" ]; then
+		return
+	fi
+
+	if [ -d "$ECL_BIN_PATH/../include" ]; then
+		ECL_INC_PATH="$ECL_BIN_PATH/../include"
+		return
+	fi
+
+	if [ -f "$ECL_BIN_PATH/ecl/ecl.h" ]; then
+		ECL_INC_PATH=$ECL_BIN_PATH
+		return
+	fi
+}
+
+function guess_ecl_lib_path {
+	if [ "$ECL_LIB_PATH" != "" ]; then
+		return
+	fi
+
+	if [ "$ECL_BIN_PATH" == "" ]; then
+		return
+	fi
+
+	if [ -d "$ECL_BIN_PATH/../lib" ]; then
+		ECL_LIB_PATH="$ECL_BIN_PATH/../lib"
+		return
+	fi
+
+	if [ -f "$ECL_BIN_PATH/ecl.dll" ]; then
+		ECL_LIB_PATH=$ECL_BIN_PATH
+		return
+	fi
+}
+
+guess_ecl_bin_path
+
+function print_help {
+	echo "Welcome to Turtl's (probably foolishly) hand-generated configure script."
+	echo "Usage:"
+	echo "  ./configure [OPTIONS]"
+	echo
+	echo "Options:"
+	echo "  --help                      Show this help"
+	echo "  --ecl-bin-path [path]       Set the path that contains the ECL binaries."
+	echo "  --ecl-include-path [path]   Set the path to ECL's headers."
+	echo "  --ecl-lib-path [path]       Set the path to ECL's libs (libecl.so/ecl.dll)."
+	echo "  --nw-target [version]       The Node-webkit version to build against (default $NW_TARGET)."
+	echo
+}
+
+while test -n "$1"; do
+    case "$1" in
+        --help)
+            print_help
+			exit 0
+            ;;
+		--ecl-bin-path)
+			ECL_BIN_PATH=$2
+			shift
+			;;
+		--ecl-include-path)
+			ECL_INC_PATH=$2
+			shift
+			;;
+		--ecl-lib-path)
+			ECL_LIB_PATH=$2
+			shift
+			;;
+		--nw-target)
+			NW_TARGET=$2
+			shift
+			;;
+        *)
+			CFG_ARGS="$*"
+			break;
+            ;;
+    esac
+    shift
+done
+
+guess_ecl_include_path
+guess_ecl_lib_path
+
+ECL_EXE=$ECL_BIN_PATH/ecl
+
+if [ -d $ECL_EXE ]; then
+	ECL_EXE=$ECL_BIN_PATH/ecl.exe
+fi
+
+if [ "$CC" == "" ]; then
+	CC="gcc"
+fi
+
+echo "Found the following paths:"
+echo "  ECL bin:      $ECL_BIN_PATH"
+echo "  ECL include:  $ECL_INC_PATH"
+echo "  ECL lib:      $ECL_LIB_PATH"
+echo "  ECL exe:      $ECL_EXE"
+echo
+echo "Generating Makefiles."
+
+MAKEFILES=(./Makefile.in ./build/Makefile.in ./app/Makefile.in ./node_modules/turtl/Makefile.in)
+for mf in "${MAKEFILES[@]}"; do
+	if [ ! -f $mf ]; then
+		echo "Missing makefile: $mf"
+		continue
+	fi
+	real="`echo $mf | sed 's|\.in$||'`"
+	cp $mf $real
+	sed -i "s|@cc@|${CC}|g" $real
+	sed -i "s|@ecl_bin@|${ECL_BIN_PATH}|g" $real
+	sed -i "s|@ecl_inc@|${ECL_INC_PATH}|g" $real
+	sed -i "s|@ecl_lib@|${ECL_LIB_PATH}|g" $real
+	sed -i "s|@ecl_exe@|${EXE}|g" $real
+	sed -i "s|@nw_target@|${NW_TARGET}|g" $real
+	echo "  generated $real"
+done
+
