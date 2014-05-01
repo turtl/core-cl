@@ -7,7 +7,7 @@
 	#define TURTL_CONV __cdecl
 #else
 	#define TURTL_EXPORT extern
-	#define TURTL_CONV __cdecl
+	#define TURTL_CONV
 #endif
 
 #ifdef __cplusplus
