@@ -1,23 +1,29 @@
 CC=gcc
-ECL=/c/usr/local/ecl
-CFLAGS=-I$(ECL) $$($(ECL)/ecl-config --cflags)
-LDFLAGS=-L$(ECL) -lecl
+ECL=/usr/local/ecl
+CFLAGS=-fPIC -I$(ECL) $$($(ECL)/bin/ecl-config --cflags)
+LDFLAGS=-L$(ECL) $$($(ECL)/bin/ecl-config --ldflags)
 
 EXEFILE=ecl-test.exe
+ifeq ($(OS),Windows_NT)
+	WINFLAGS=-Wl,--output-def,turtl.def
+	LIB=turtl.dll
+else
+	WINFLAGS=
+	LIB=turtl.so
+endif
 
 exe: CFLAGS := -DEXE $(CFLAGS)
 
-all: dll
+all: shared
 
-dll: main.o
+shared: main.o
 
-	$(CC) -shared -o ../turtl.dll main.o -Wl,--output-def,turtl.def $(LDFLAGS)
-	strip ../turtl.dll
+	$(CC) -shared -o $(LIB) main.o $(WINFLAGS) $(LDFLAGS)
+	#strip $(LIB)
 
 lib: dll
 
 	lib /machine:i386 /def:turtl.def
-	mv turtl.lib ..
 
 exe: main.o
 
@@ -29,9 +35,9 @@ main.o:
 
 clean:
 
-	rm -f *.a *.o *.def *.dll *.lib *.exp
+	rm -f *.a *.o *.def *.so *.dll *.lib *.exp
 
 remove:
 
-	rm -f ../turtl.dll ../test/$(EXEFILE) ../turtl.lib
+	rm -f ../test/$(EXEFILE)
 
