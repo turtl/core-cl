@@ -8,11 +8,11 @@ $(SUBDIRS): $(BUILDDIRS)
 $(BUILDDIRS):
 	$(MAKE) -C $(@:build-%=%)
 
-clean: mainclean $(CLEANDIRS)
+clean: $(CLEANDIRS)
 $(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
 
-distclean:
+distclean: clean
 	rm -f Makefile build/Makefile node_modules/turtl/Makefile app/Makefile
 
 .PHONY: subdirs $(SUBDIRS)
