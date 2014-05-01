@@ -82,6 +82,9 @@ function print_help {
 	echo "  --ecl-lib-path [path]       Set the path to ECL's libs (libecl.so/ecl.dll)."
 	echo "  --nw-target [version]       The Node-webkit version to build against (default $NW_TARGET)."
 	echo
+	echo "Note that setting --ecl-bin-path will help the configure script find the"
+	echo "rest of the ECL directories, assuming you didn't split them up."
+	echo
 }
 
 while test -n "$1"; do
@@ -147,7 +150,7 @@ for mf in "${MAKEFILES[@]}"; do
 	sed -i "s|@ecl_bin@|${ECL_BIN_PATH}|g" $real
 	sed -i "s|@ecl_inc@|${ECL_INC_PATH}|g" $real
 	sed -i "s|@ecl_lib@|${ECL_LIB_PATH}|g" $real
-	sed -i "s|@ecl_exe@|${EXE}|g" $real
+	sed -i "s|@ecl_exe@|${ECL_EXE}|g" $real
 	sed -i "s|@nw_target@|${NW_TARGET}|g" $real
 	echo "  generated $real"
 done

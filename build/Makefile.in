@@ -10,21 +10,23 @@ EXEFILE=ecl-test.exe
 ifeq ($(OS),Windows_NT)
 	WINFLAGS=-Wl,--output-def,turtl.def
 	LIB=turtl.dll
+	TARGET=lib
 else
 	WINFLAGS=
 	LIB=turtl.so
+	TARGET=shared
 endif
 
 exe: CFLAGS := -DEXE $(CFLAGS)
 
-all: shared
+all: $(TARGET)
 
 shared: main.o
 
 	$(CC) -shared -o $(LIB) main.o $(WINFLAGS) $(LDFLAGS)
 	#strip $(LIB)
 
-lib: dll
+lib: shared
 
 	lib /machine:i386 /def:turtl.def
 
