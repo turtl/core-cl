@@ -1,11 +1,11 @@
 Place the following Common Lisp packages in this directory:
 
-alexandria-20140316-git
-babel-20140316-git
+alexandria-20140425-git
+babel-20140425-git
 bordeaux-threads-0.8.3
 cffi_0.12.0
 chunga-1.1.5
-cl+ssl-20140316-git
+cl+ssl-20140425-git
 cl-async-future-git
 cl-async-git
 cl-base64-20101006-git
@@ -16,10 +16,10 @@ drakma-1.3.8
 drakma-async-git
 flexi-streams-1.0.12
 http-parse-git
-lparallel-git
+lparallel-20140425-git
 puri-20101006-git
 trivial-features-20130312-git
 trivial-garbage-20130312-git
-trivial-gray-streams-20140316-git
+trivial-gray-streams-20140425-git
 usocket-0.6.1
 yason-0.6.5

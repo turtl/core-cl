@@ -1,6 +1,7 @@
 ;; -----------------------------------------------------------------------------
 ;; main setup
 ;; -----------------------------------------------------------------------------
+(ext:install-bytecodes-compiler)
 ;; setup ASDF
 (require :asdf)
 (let ((cur-dir (truename *default-pathname-defaults*)))
