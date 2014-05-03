@@ -25,6 +25,7 @@ shared: main.o
 
 	$(CC) -shared -o $(LIB) main.o $(WINFLAGS) $(LDFLAGS)
 	#strip $(LIB)
+	cp $(LIB) ..
 
 lib: shared
 
@@ -44,5 +45,5 @@ clean:
 
 remove:
 
-	rm -f ../test/$(EXEFILE)
+	rm -f ../$(LIB) ../test/$(EXEFILE)
 
