@@ -25,6 +25,11 @@ TURTL_EXPORT int TURTL_CONV turtl_init();
 TURTL_EXPORT void TURTL_CONV turtl_shutdown();
 
 /**
+ * Get the last error from turtl_init
+ */
+TURTL_EXPORT char* TURTL_CONV turtl_get_last_error();
+
+/**
  * Initialize our (empty) message callback functions. These are used to register
  * message passing callbacks between our lisp and UI worlds.
  */
