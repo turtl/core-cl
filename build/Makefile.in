@@ -41,7 +41,7 @@ main.o:
 
 clean:
 
-	rm -f *.a *.o *.def *.so *.dll *.lib *.exp
+	rm -f *.a *.o *.def *.so *.dll *.lib *.exp ../$(LIB) ../turtl.lib
 
 remove:
 
