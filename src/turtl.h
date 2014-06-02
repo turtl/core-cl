@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Start our lisp process, do any needed setup, and load our main lisp app.
  */
-TURTL_EXPORT int TURTL_CONV turtl_init();
+TURTL_EXPORT int TURTL_CONV turtl_init(int);
 
 /**
  * Shutdown the lisp world.

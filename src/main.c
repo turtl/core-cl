@@ -14,7 +14,7 @@ char turtl_last_error[256];
 /**
  * Start our lisp process, do any needed setup, and load our main lisp app.
  */
-TURTL_EXPORT int TURTL_CONV turtl_init()
+TURTL_EXPORT int TURTL_CONV turtl_init(int nw)
 {
 	int res;
 	cl_object evalres;
@@ -35,17 +35,22 @@ TURTL_EXPORT int TURTL_CONV turtl_init()
 		return 3;
 	}
 
+	if(nw == 1)
+	{
+		si_safe_eval(3, c_string_to_object("(push :nw *features*)"), Cnil, OBJNULL);
+	}
+
 	cl_object init_form = c_string_to_object("\
 		(handler-case\
 		  (progn\
 		    (si:trap-fpe t nil)\
-		    #+windows\
+		    #+(and windows nw)\
 			  (progn\
 		        (defvar *old-terminal-io* *terminal-io*)\
 		        (defvar *old-error-output* *error-output*)\
 		        (setf *error-output* (make-broadcast-stream))\
 			    (setf *standard-output* (make-string-output-stream)))\
-		    (load \"app/loader\")\
+		    (load \"app/bootstrap\")\
 			(values t nil))\
 		  (t (e) (values nil e)))\
 	");
@@ -144,7 +149,7 @@ TURTL_EXPORT void TURTL_CONV turtl_msg_to_ui(unsigned long msg_length, const cha
 
 int main(int argc, char **argv)
 {
-	int init = turtl_init();
+	int init = turtl_init(0);
 	if(init != 0)
 	{
 		printf("%s\n", turtl_get_last_error());
