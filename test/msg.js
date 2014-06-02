@@ -43,5 +43,26 @@ var test_response	=	function()
 	setTimeout(send_ping, 100);
 };
 
-test_response();
+var test_easy	=	function()
+{
+	var Event	=	new TurtlEvent.Event();
+	var Remote	=	new TurtlEvent.Remote();
 
+	// pipe remote events into local trigger
+	Remote.bind(Event.trigger);
+
+	TurtlEvent.start();
+
+	var req	=	function(event) {
+		Remote.send(event, function(response) {
+			console.log('js: response: ', response);
+		});
+	};
+	return function() {
+		req({ev: 'http', data: 'https://api.turtl.it'});
+	};
+}
+
+exports.bind		=	test_bind;
+exports.response	=	test_response;
+exports.easy		=	test_easy;
