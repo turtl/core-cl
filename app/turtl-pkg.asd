@@ -7,10 +7,15 @@
                #:cl-async-future
                #:cl-async 
                #:cl-hash-util
+               #:static-vectors
                #:bordeaux-threads
+               #:cl-nettle
                #:lparallel
+               #:event-glue
+               #:vom
                #:cl-ppcre
                #:babel
+               #:sqlite
                #:drakma-async
                #:flexi-streams
                #:yason))

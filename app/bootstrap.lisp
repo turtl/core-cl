@@ -25,4 +25,3 @@
 (format t "~%~%")
 (format t "Turtl loaded.~%")
 (turtl-core:start)
-

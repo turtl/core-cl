@@ -1,5 +1,7 @@
 (defpackage :turtl-core
-  (:use :cl :cl-async-future)
+  (:use :cl :alexandria :cl-async-future :cl-hash-util :event-glue)
+  (:shadow :event
+           :trigger)
   (:export :start
            :stop
            :trigger
