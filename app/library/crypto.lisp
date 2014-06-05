@@ -1,4 +1,7 @@
-;;; This is essentially the lisp version library/tcrypt.js (from turtl/js).
+;;; This is essentially the lisp version library/tcrypt.js (from turtl/js). Note
+;;; that some of the code may not (yet) be idiomatic lisp (mainly, liberal use
+;;; of (setf)s as opposed to nesting (let)s mainly to achieve code-parity with
+;;; tcrypt.js. If I have offended anyone, I am truly sorry.
 
 (in-package :turtl-core)
 
@@ -57,6 +60,8 @@
    serialized, return a payload description."
   (unless (and cipher block-mode)
     (error 'crypto-error :msg "encode-payload-description: must provide both cipher and block-mode"))
+  ;; we don't know how many bytes we'll be using, so just make an expandable
+  ;; array
   (let ((desc (make-array 0 :element-type 'nec:octet :adjustable t :fill-pointer t)))
     (when (<= 1 version)
       (let ((cipher-idx (position cipher +cipher-index+))
@@ -96,8 +101,6 @@
                                description
                                iv
                                ciphertext)))
-    (format t "payload (~a): ~s~%" (length payload) payload)
-    (format t "hmac key: ~s~%" (to-base64 passphrase))
     (nec:hmac-sha256 passphrase payload)))
 
 (defun derive-keys (master-key &key (hasher :sha1) (iterations 50) (key-size 64))
@@ -250,7 +253,7 @@
                    auth
                    ciphertext))))
 
-(defun fix-utf-key (utf8-key)
+(defun fix-utf8-key (utf8-key)
   "Wow. Such fail. In older versions of Turtl, keys were UTF8 encoded strings.
    This function converts the keys back."
   (let ((key-str (babel:octets-to-string utf8-key :encoding :utf-8))
@@ -311,13 +314,6 @@
       (setf decrypted (subseq decrypted 1)))
     decrypted))
 
-(defun ctest()
-(let* ((key (key-from-string "wqBkfcKUwqbCpcKiHFsqLsOzL8O3wqAEfMKpc8OsCWMtQC4iecOHwobDg1fDtw=="))
-       (ciphertext (from-base64 "AAPaSAJDTCyvIFeveVQEiaSPhVmLauA8AugseiHwtya1uwQAAAAAnABM9+1DPTYxbpiNnA3oJIOfJi2TGkduA9lDKLjT9eq3k5cHnka+l1HXP9b295WS25AxO3rn5/jbnUUOKXCPmLvJnvcyc3ba42WnjF8NsyMws8QnIli78MxnrCvZWWG1tNgpbg4TlfnoBKRgp+d5MLpuCe1LqHYHdPU2NjaLwF8WVhK0HnHBuM6/CMzgBW/nOn1Cb5O4yfhUoGzUiVDa1AooZ+0iL8vBIkJXI7ATXnhLSUMXnyQUJcD5vcbKGMaC8Sb5/OjR80GFEMjTDREPxx1rZcWoUYfudv5mVEo1HZYlmqt4qeNb0sVVnz/bzzunn/o7fp2tvVkK1jR/MGeHNPWYeTPeTHgD7EH5hJAxygnaIzUDpCYraEYvycnpORwF694LuykW+CFTa4tlTReE+6Z0zlC2K639lAn3uDm0QuS85Jmd8XvZyh1w3GOs1S94IlgUnbDX4zrzxvC6AEFaUcuCA6CrP5rksMM4FdEvQSE7Cz6RPNQR7CEmxmUKH7NxPPAYPCkuVHfXSPk/dq7aq/j2vfcfHNvSVTmQ0I7QWQk6PFmA1rnR46MhlPBTaViO"))
-       (plain (decrypt key ciphertext)))
-  (format t "dec: ~s~%" (babel:octets-to-string plain)))
-)
-
 (defun keygen (passphrase salt iterations key-size &key (hasher :sha1))
   "Generate a key from a passphrase using PBKDF2."
   (nec:pbkdf2 passphrase (or salt #()) iterations key-size :hasher hasher))
@@ -375,7 +371,7 @@
   "Generate a random encryption key."
   (random-bytes 32))
 
-(defun thash (data &key (hasher 'sha256))
+(defun thash (data &key (hasher :sha256))
   "Hash the given data (defaults to sha256)."
   (let ((hash-fn (intern (string hasher) 'nec)))
     (assert (fboundp hash-fn))

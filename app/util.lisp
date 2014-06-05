@@ -60,9 +60,3 @@
        (progn ,@body)
        (t (e) (format t "err: ~a~%" e)))))
 
-(defun to-string (bytes)
-  "Converts bytes to a string (no encoding or anything, just raw byte string)."
-  (with-output-to-string (s)
-    (loop for x across bytes do
-      (format s "~c" (code-char x)))))
-
