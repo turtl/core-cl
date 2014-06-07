@@ -182,12 +182,21 @@
       ;; return no ciphertext, just everything before
       (return-from deserialize (subseq enc 0 idx)))
 
-    (setf ciphertext (make-array (- (length enc) idx) :displaced-to enc :displaced-index-offset idx))
+    ;; here, we return the start/end values for our ciphertext instead of the
+    ;; ciphertext itself. this makes it easy to pass in the entire array to
+    ;; nettle with :start specified instead of copying out our potentially large
+    ;; ciphertext into a whole new array.
+    ;;
+    ;; NOTE: we don't *really* have to specify the end value, but sometime in
+    ;; the distant future we may try to cram more garbage after the ciphertext,
+    ;; so for future-compatibility and correctness, we just specify it.
+    (setf ciphertext nil)
     
     (let ((res (list :version version
                      :desc desc
                      :iv iv
-                     :ciphertext ciphertext)))
+                     :ciphertext ciphertext
+                     :ciphertext-pos (cons idx (length enc)))))
       (when hmac
         (setf (getf res :hmac) hmac))
       res)))
@@ -253,6 +262,16 @@
                    auth
                    ciphertext))))
 
+;(let* ((arr (babel:string-to-octets "hello, how are you"))
+;       (arrd (make-array (length arr)
+;                         :displaced-to arr))
+;       (arrd (coerce arrd '(simple-array (unsigned-byte 8) (18)))))
+;  (format t "arr[5]: ~a~%" (aref arr 5))
+;  (setf (aref arrd 5) 45)
+;  (format t "arr[5]: ~a~%" (aref arr 5))
+;  (values (type-of arr)
+;          (type-of arrd)))
+
 (defun fix-utf8-key (utf8-key)
   "Wow. Such fail. In older versions of Turtl, keys were UTF8 encoded strings.
    This function converts the keys back."
@@ -280,10 +299,11 @@
                          :block-mode :cbc)
                    (decode-payload-description version (getf enc :desc))))
          (iv (getf enc :iv))
-         (payload (getf enc :ciphertext))
+         (ciphertext-start (car (getf enc :ciphertext-pos)))
+         (ciphertext-end (cdr (getf enc :ciphertext-pos)))
          (decrypted nil))
     (cond ((zerop version)
-           (setf decrypted (nec:decrypt-aes-cbc key payload iv)))
+           (setf decrypted (nec:decrypt-aes-cbc key (getf enc :ciphertext) iv)))
           ((<= version 4)
            (let* ((kdf-entry (aref +kdf-index+ (getf desc :kdf-mode)))
                   (keys (derive-keys key
@@ -297,15 +317,18 @@
                                                       version
                                                       (getf enc :desc)
                                                       iv
-                                                      payload)))
+                                                      (subseq ciphertext ciphertext-start ciphertext-end))))
              (unless (nec:secure-equal payload-hmac compare-hmac)
                (error 'crypto-authentication-failure :msg "Payload HMACs did not match (either you have tampered data or a bad key)"))
-             (setf decrypted (nec:decrypt-aes-cbc crypto-key payload iv))))
+             (setf decrypted (nec:decrypt-aes-cbc crypto-key (subseq ciphertext ciphertext-start ciphertext-end) iv))))
           ((<= 5 version)
            (let ((auth (deserialize ciphertext :raw t)))
+             (format t "ciph length: ~s~%" (list ciphertext-start ciphertext-end))
              (handler-case
-               (setf decrypted (nec:decrypt-aes-gcm key payload iv auth))
-               (nec:nettle-auth-error ()
+               (setf decrypted (nec:decrypt-aes-gcm key ciphertext iv auth
+                                                    :start ciphertext-start
+                                                    :end ciphertext-end))
+               (nec:nettle-crypto-auth-error ()
                  (error 'crypto-authentication-failure :msg "GCM authentication failed."))))))
 
     ;; made it. if were version 4 or 5, remove the leading utf8 byte. this is an

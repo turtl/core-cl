@@ -7,7 +7,7 @@
 (defvar *run-lock* (bt:make-lock "run")
   "Run lock.")
 
-(defparameter *turtl-thread* nil
+(defvar *turtl-thread* nil
   "Holds Turtl's main event loop thread.")
 
 (defun main-event-dispatch ()
@@ -36,6 +36,7 @@
   (let ((run (bt:with-lock-held (*run-lock*) *run*)))
     (cond (run
             (event-handler)
+            (poll-jobs)
             (as:delay 'main-event-loop :time 0.0001))
           (t
             (as:clear-signal-handlers)))))
@@ -48,6 +49,7 @@
                            (lambda (ev)
                              (vom:error "top-level error: ~a" ev)))
       (vom:info "event loop started")
+      (setf lparallel:*kernel* (lparallel:make-kernel (get-num-cores)))
       (ignore-errors (nec:random-init))
       (main-event-loop)
       (main-event-dispatch)
@@ -57,6 +59,8 @@
           (as:clear-signal-handlers)))
       (when start-fn
         (as:with-delay (0) (funcall start-fn))))
+    (vom:info "event loop ended (turtl shutting down)")
+    (lparallel:end-kernel :wait t)
     (nec:random-close)
     (setf *turtl-thread* nil)))
 
@@ -77,7 +81,7 @@
   (bt:with-lock-held (*run-lock*)
     (setf *run* nil)))
 
-(push-event (event "http" :data "http://api.beeets.com/"))
+;(push-event (event "http" :data "http://api.beeets.com/"))
 
 (defun test2 ()
   (push-event (event "http" :data "http://api.beeets.com/"))

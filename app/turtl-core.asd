@@ -22,7 +22,14 @@
     :components
     ((:file "crypto")
      (:file "api")
-     (:file "model")
+     (:file "worker")
+     (:module mvc
+      :serial t
+      :components
+      ((:file "common")
+       (:file "model")
+       (:file "collection")))
+     (:file "protected")
      (:file "storage")))
    (:module models
     :depends-on ("package" "util" "event" library)

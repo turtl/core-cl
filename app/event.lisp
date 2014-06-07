@@ -109,7 +109,7 @@
    dispatch object."
   (declare (optimize (speed 3) (safety 1))
            (type turtl-dispatch dispatch))
-  (vom:debug2 "running event-handler")
+  (vom:debug4 "running event-handler")
   (let ((events nil))
     (bt:with-lock-held ((dispatch-queue-lock dispatch))
       (when (dispatch-queue dispatch)

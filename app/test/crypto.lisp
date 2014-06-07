@@ -11,7 +11,22 @@
 
 (in-suite turtl-core-crypto)
 
-(test key-tests
+(test crypto-init
+  (is (eq (nec:random-init) t)))
+
+(test (random-bytes :depends-on crypto-init)
+  "Test we can get random bytes."
+  (let ((rnd-57 (random-bytes 57))
+        (rnd-3 (random-bytes 3))
+        (rnd-32 (random-bytes 32)))
+    (is (typep rnd-57 'nec:octet-array))
+    (is (typep rnd-3 'nec:octet-array))
+    (is (typep rnd-32 'nec:octet-array))
+    (is (= 57 (length rnd-57)))
+    (is (= 3 (length rnd-3)))
+    (is (= 32 (length rnd-32)))))
+
+(test (key-tests :depends-on random-bytes)
   "Test (de)serialization, random creation of keys."
   ;; test key deserialization from base64 (values grabbed from tcrypt)
   (let ((key-str "csUNaLbDnnZitPgkqOvIu8k1EPru+liFBnoOclHfJnw=")
@@ -60,7 +75,8 @@
 ;; version 1,2 missing (must have been short lived...)
 
 (test (decryption-test-version3 :depends-on key-tests)
-  "Test decryption of version 3 against Turtl's tcrypt library."
+  "Test decryption of version 3 against Turtl's tcrypt library. Also contains a
+   built-in test for fixing utf8-encoded keys."
   (let* ((key (key-from-string "HsKTwqcAdzAXSsK2Z8OaOy4RI8OqKnoUw5Miw7BbJcOUT8KOdcO0JwsO"))
          (tcrypt-ciphertext (from-base64 "AAOpckDeBymudt1AnCMpNUWE/3gA53BFCXVfl5eRXR6h2gQAAAAAmF5Li7QHzaJda8AwGom/ZGcFhKUjE9VOot2xxxKgQNop6MOkMq6stbbARt8ltbsVQb8I5wSTddcGUJapB6Spd/O+lZ7neYVBNttIm+kb3mekW4AjSBrNBFGpfqsGzOBp3ZVVpkUBJwlCT3/ZJdUXU9KqFlbHq/1uNesiRtXEugTRM4rtKaWoOvPvFye6msGDIxecdjJjI2tSJv4mCvPqnenPw9HzGGDp6U1s9r/FWtdsGoRfxuDPtIKEzuXm4t4CjxMlx/83fOV7xxE4EneMRTOlRUf8MM0eqNkDqAeDK8YNtOmdJLs3XVXRYGvPvh6eR9WcemLbcliz1gqjEmpc+UTWLrL/XDlbDcCQ2RacvJLoEq6i5ogkMa7XTyjKGhrg"))
          (tcrypt-plaintext "{\"type\":\"link\",\"url\":\"http://viget.com/extend/level-up-your-shell-game\",\"title\":\"Level Up Your Shell Game\",\"text\":\"Covers movements, aliases, many shortcuts. Good article.\\n\\nTODO: break out the useful bits into individual notes =]\",\"tags\":[\"bash\",\"shell\"],\"sort\":12}")
@@ -82,4 +98,17 @@
          (tcrypt-plaintext "{\"type\":\"link\",\"url\":\"http://www.baynatives.com/plants/Erysimum-capitatum/\",\"title\":\"Erysimum capitatum Gallery - Bay Natives: The San Francisco Source for Native Plants\",\"text\":\"![image](http://www.baynatives.com/plants/Erysimum-capitatum/03-P4082478__.jpg)  \\n\",\"tags\":[\"backyard\",\"garden\",\"native plants\",\"bay natives\",\"flower\",\"wildflower\"]}")
          (turtl-plaintext (babel:octets-to-string (decrypt key tcrypt-ciphertext))))
     (is (string= tcrypt-plaintext turtl-plaintext))))
+
+(test (random-float :depends-on random-bytes)
+  "Test we get random floats."
+  (let ((sum 0)
+        (resolution 9999))
+    (dotimes (i resolution)
+      (incf sum (random-number)))
+    (is (typep sum 'float))
+    (is (<= 0 sum resolution))))
+
+(test (random-close :depends-on key-tests)
+  "Close the random context."
+  (nec:random-close))
 

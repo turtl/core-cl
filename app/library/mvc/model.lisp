@@ -1,15 +1,16 @@
+;;; This file creates a class which somewhat mimicks how a Model functions in
+;;; the Composer.js javascript MVC framework: it is an object that contains
+;;; arbitrary data (no schema enforcements) and is able to be serialized and
+;;; deserialized to JSON easily. It also provides a number of methods for
+;;; accessing its data which, when changed, fire events using the model's event
+;;; dispatch capabilities (provided by event-glue).
+
 (in-package :turtl-core)
 
-(defvar *next-cid*
-  (let ((cid 0))
-    (lambda () (format nil "z.~a000.c~a" (timestamp) (incf cid))))
-  "Function that generates TMP ids")
-
-(defclass model ()
-  ((cid :accessor cid :initform (funcall *next-cid*))
-   (data :accessor data :initform (make-hash-table :test #'equal))
+(defclass model (mvc-base)
+  ((data :accessor data :initform (make-hash-table :test #'equal))
    (changed :accessor changed :initform nil)
-   (dispatch :accessor dispatch :initform (make-dispatch)))
+   (collections :accessor collections :initform nil))
   (:documentation "Defines a generic model."))
 
 (defgeneric mid (model &optional strict)
@@ -24,15 +25,21 @@
 (defgeneric munset (model field)
   (:documentation "Unset a field in a model."))
 
-(defgeneric clear (model)
+(defgeneric mclear (model)
   (:documentation "Clear out a model's data."))
 
-(defun new (type data)
+(defgeneric mdestroy (model)
+  (:documentation "Destroy a model."))
+
+(defun create-model (type &optional data)
   "Create a model of type type with the given data."
   (let ((model (make-instance type)))
     (when data
       (mset model data))
     model))
+
+(defmethod mserialize ((model model) &key &allow-other-keys)
+  (data model))
 
 (defmethod mid ((model model) &optional strict)
   (let ((id (gethash "id" (data model))))
@@ -77,9 +84,14 @@
       (trigger (event "change") :dispatch (dispatch model)))
     model))
 
-(defmethod clear ((model model))
+(defmethod mclear ((model model))
   (unless (zerop (hash-table-count (data model)))
     (clrhash (data model))
     (trigger (event "change") :dispatch (dispatch model)))
   model)
+
+(defmethod mdestroy ((model model))
+  (mclear model)
+  (trigger (event "destroy") :dispatch (dispatch model))
+  (wipe :dispatch (dispatch model)))
 

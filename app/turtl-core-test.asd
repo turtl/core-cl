@@ -8,5 +8,8 @@
   ((:module test
     :serial t
     :components
-    ((:file "main")))))
+    ((:file "main")
+     (:file "crypto")
+     (:file "mvc")
+     (:file "protected")))))
 

@@ -15,7 +15,7 @@
 (defparameter *schema* nil
   "Holds the local DB schema. Added to incrementally by define-db-object.")
 
-(defclass db-object (model) ()
+(defclass db-object (protected) ()
   (:documentation "Base Turtl DB object class."))
 
 (defgeneric db-table (object)

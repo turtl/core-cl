@@ -60,3 +60,7 @@
        (progn ,@body)
        (t (e) (format t "err: ~a~%" e)))))
 
+(defun get-num-cores ()
+  "Gets the number of CPUs/cores on the current device."
+  4)
+
