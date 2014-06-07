@@ -1,5 +1,4 @@
 (in-package :turtl-core-test)
-
 (in-suite turtl-core-mvc)
 
 (defclass dog (model) ())

@@ -45,11 +45,34 @@
     ;; future once done. if we happen to catch any errors, signal them on the
     ;; future.
     (vom:debug2 "protected: deserialize: ~a bytes" (length body))
-    (work (decrypted (handler-case (decrypt (key model) raw) (t (e) e)))
+    (alet ((decrypted (work (decrypt (key model) raw))))
       (if (typep decrypted 'error)
           (signal-error future decrypted)
           (finish future decrypted)))
     future))
+
+(defmethod mserialize ((model protected) &key &allow-other-keys)
+  (let ((data (call-next-method))
+        (public-fields (public-fields model))
+        (private-fields (private-fields model))
+        (public (make-hash-table :test #'equal))
+        (private (make-hash-table :test #'equal)))
+    (loop for k being the hash-keys of data
+          for v being the hash-values of data do
+      (cond ((find k public-fields :test 'string=)
+             (setf (gethash k public) v))
+            ((find k private-fields :test 'string=)
+             (setf (gethash k private) v))))
+    (when (raw-data model)
+      (setf (gethash (body-key model) public) (mget model (body-key model)))
+      (return-from mserialize public))
+    (unless (key model)
+      (return-from mserialize))
+    (alet* ((json (with-output-to-string (s) (yason:encode private s)))
+            (enc (work (encrypt (key model) (babel:string-to-octets json))))
+            (base64 (to-base64 enc)))
+      (setf (gethash (body-key model) public) base64)
+      public)))
 
 (defmethod find-key ((model protected) keydata)
   )

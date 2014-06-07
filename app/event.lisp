@@ -24,8 +24,6 @@
   (unless (forwardsp *remote-dispatch* *remote-forward-fn*)
     (forward *remote-dispatch* *remote-forward-fn*)))
 
-(setup-remote-forwarding)
-
 (defclass turtl-event (event-glue:event)
   ((id :accessor id :initarg :id :initform nil
      :documentation "Holds the event's UUID."))
@@ -101,6 +99,8 @@
            (type turtl-dispatch dispatch))
   (bt:with-lock-held ((dispatch-queue-lock dispatch))
     (push event (dispatch-queue dispatch)))
+  (let ((cl-async-base:*event-base* *turtl-event-loop*))
+    (as:delay (lambda () (event-handler)) :time 0))
   nil)
 
 (defun event-handler (&key (dispatch *remote-dispatch*))

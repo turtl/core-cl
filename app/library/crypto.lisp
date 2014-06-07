@@ -323,7 +323,6 @@
              (setf decrypted (nec:decrypt-aes-cbc crypto-key (subseq ciphertext ciphertext-start ciphertext-end) iv))))
           ((<= 5 version)
            (let ((auth (deserialize ciphertext :raw t)))
-             (format t "ciph length: ~s~%" (list ciphertext-start ciphertext-end))
              (handler-case
                (setf decrypted (nec:decrypt-aes-gcm key ciphertext iv auth
                                                     :start ciphertext-start

@@ -8,7 +8,6 @@
 ;;;
 ;;; [1]: http://bitwiseshiftleft.github.io/sjcl/
 (in-package :turtl-core-test)
-
 (in-suite turtl-core-crypto)
 
 (test crypto-init
