@@ -10,6 +10,7 @@
    (:file "config" :depends-on ("package"))
    (:file "util" :depends-on ("package" "config"))
    (:file "event" :depends-on ("package" "util" "config"))
+   (:file "globals" :depends-on ("package" "util" "config"))
    (:module comm
     :depends-on ("package" "util" "config" "event")
     :serial t

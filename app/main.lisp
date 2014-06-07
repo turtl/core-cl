@@ -78,7 +78,8 @@
 
 (defun stop ()
   (vom:info "stopping turtl-core")
-  (as:add-event *stop-event* :activate t))
+  (as:add-event *stop-event* :activate t)
+  (setf *stop-event* nil))
 
 ;(push-event (event "http" :data "http://api.beeets.com/"))
 

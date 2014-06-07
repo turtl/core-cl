@@ -1,34 +1,35 @@
 (in-package :turtl-core)
 
-(defmacro work (operation)
-  "Run operation in parallel, calling body with binding bound to the result of
-   operation when complete. Normally we could just use lparallel's plet, but it
-   blocks, and we instead nee to poll for the completion of our futures from
-   the top-level.
+(defun do-work (operation)
+  "Run operation in background thread, finishing the returned future with the
+   value(s) of the operation once complete. The future is finished in the same
+   thread as the event loop, offering seamless integration with futures for
+   background jobs.
    
-   For now, this only supports one return value."
-  (let ((result (gensym "result"))
-        (err (gensym "err"))
-        (future (gensym "future"))
-        (event (gensym "event")))
-    `(let* ((,result nil)
-            (,err nil)
-            (,future (make-future))
-            (,event (as:make-event (lambda ()
-                                     (vom:debug1 "work: completed: ~a" ',operation)
-                                     (if ,err
-                                         (signal-error ,future ,err)
-                                         (apply 'finish (append (list ,future)
-                                                                ,result)))))))
-       (lparallel:future
-         (unwind-protect
-           (handler-case
-             (progn
-               (vom:debug1 "work: processing ~a~%" ',operation)
-               (setf ,result (multiple-value-list ,operation)))
-             (t (e)
-               (setf ,err e)))
-           (as:add-event ,event :activate t)))
-       (vom:debug1 "work: queuing ~s" ',operation)
-       ,future)))
+   Uses lparallel in the background for the thread pool."
+  (let* ((result nil)
+         (err nil)
+         (future (make-future))
+         (event (as:make-event (lambda ()
+                                  (vom:debug1 "do-work: completed")
+                                  (if err
+                                      (signal-error future err)
+                                      (apply 'finish (append (list future)
+                                                             result)))))))
+    (lparallel:future
+      (unwind-protect
+        (handler-case
+          (progn
+            (vom:debug1 "do-work: processing")
+            (setf result (multiple-value-list (funcall operation))))
+          (t (e)
+            (setf err e)))
+        (as:add-event event :activate t)))
+    (vom:debug1 "do-work: queuing" 'operation)
+    future))
+
+(defmacro work (&body body)
+  "Thin wrapper around do-work to remove the HORRIBLE need to wrap things in
+   (lambda () ...)"
+  `(do-work (lambda () ,@body)))
 
