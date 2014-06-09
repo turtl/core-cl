@@ -12,9 +12,9 @@
     (let* ((bytes (babel:string-to-octets str :encoding :utf-8))
            (size (length bytes)))
       (vom:debug "send-remote (~a): ~a" size (subseq str 0 (min (length str) 100)))
-      (static-vectors:with-static-vector (c-msg (length bytes) :element-type '(unsigned-byte 8))
+      (static-vectors:with-static-vector (c-msg size)
         (replace c-msg bytes)
-        (msg-to-ui (static-vectors:static-vector-pointer c-msg) (length c-msg))))
+        (msg-to-ui size (static-vectors:static-vector-pointer c-msg))))
     (t (e) (vom:error "send-remote: ~a~%" e))))
 
 (defun bind-remote-message-handler ()
