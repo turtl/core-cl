@@ -29,6 +29,7 @@
                 :model-type
                 :sort-function
                 :mserialize
+                :minit
                 :mid
                 :mget
                 :mset
@@ -51,7 +52,12 @@
                 :public-fields
                 :private-fields
                 :raw-data
-                :mdeserialize)
+                :mdeserialize
+                
+                ;; models
+                :user
+                :generate-key
+                :generate-auth)
   (:shadowing-import-from :event-glue
                           :trigger
                           :bind)
@@ -62,11 +68,16 @@
 (def-suite turtl-core-crypto :description "Crypto tests" :in turtl-core)
 (def-suite turtl-core-mvc :description "MVC tests" :in turtl-core)
 (def-suite turtl-core-protected :description "MVC protected tests" :in turtl-core)
+;; models
+(def-suite turtl-core-models :description "Model tests" :in turtl-core)
+(def-suite turtl-core-model-sync :description "Sync model" :in turtl-core-models)
+(def-suite turtl-core-model-user :description "User model" :in turtl-core-models)
+(def-suite turtl-core-model-keychain :description "Keychain model" :in turtl-core-models)
+
 
 (defmacro with-running-test (&body body)
   "Runs body in the context of a running Turtl core. Designed to quit after
-   executing the events in the body (so automatically kills the signal listeners
-   in the event loop)."
+   executing the events in the body."
   (let ((loglevel (gensym "loglevel")))
     `(let ((,loglevel (getf vom::*config* :turtl-core)))
        (vom:config :turtl-core :error)

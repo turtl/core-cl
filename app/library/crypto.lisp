@@ -209,7 +209,7 @@
     ;; handle version 0 stupidity
     (when (zerop version)
       (let* ((crypto (concatenate 'string (to-base64 enc) ":i" (to-hex iv))))
-        (return-from serialize crypto)))
+        (return-from serialize (babel:string-to-octets crypto))))
     (write-byte (ash version -8) serialized)
     (write-byte (logand version #xff) serialized)
     (when (<= version 4)

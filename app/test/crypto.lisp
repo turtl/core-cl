@@ -11,6 +11,7 @@
 (in-suite turtl-core-crypto)
 
 (test crypto-init
+  "Init the crypto system."
   (is (eq (nec:random-init) t)))
 
 (test (random-bytes :depends-on crypto-init)
@@ -60,7 +61,7 @@
          (key (key-from-string "oPCkqo99Egq1kvkYAGcL0LnovZORZ2SBpcT49Flf9yI="))
          (iv (from-base64 "Cek8BUuta935WkoOWJKQIA=="))
          (tcrypt-version "uybWwwL6GivErehe/Pt4JziZM7KBifVvLuJJRIVxIfY2vDoQz+/RrOtRU6F3MM3qiMWOD+KfnhARekzGYG7SZw==:i09e93c054bad6bddf95a4a0e58929020")
-         (turtl-version (encrypt key plaintext :version 0 :iv iv)))
+         (turtl-version (babel:octets-to-string (encrypt key plaintext :version 0 :iv iv))))
     (is (string= tcrypt-version turtl-version))))
 
 (test (decryption-test-version0 :depends-on key-tests)
@@ -107,7 +108,7 @@
     (is (typep sum 'float))
     (is (<= 0 sum resolution))))
 
-(test (random-close :depends-on key-tests)
+(test (random-close :depends-on decryption-test-version5)
   "Close the random context."
   (nec:random-close))
 

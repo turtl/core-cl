@@ -12,9 +12,6 @@
 (defparameter *db* nil
   "Holds the current database connection.")
 
-(defparameter *schema* nil
-  "Holds the local DB schema. Added to incrementally by define-db-object.")
-
 (defclass db-object (protected) ()
   (:documentation "Base Turtl DB object class."))
 
@@ -35,10 +32,6 @@
 
 (defgeneric db-destroy (object)
   (:documentation "Remove a Turtl DB object."))
-
-(defgeneric make-object (type data &key strip)
-  (:documentation
-    "Makes creating serializable DB objects from hash tables easy."))
 
 (defgeneric strip-object (object)
   (:documentation
@@ -84,13 +77,24 @@
 (defmacro define-db-object (name fields &optional meta)
   "Define a database object and also provide a set of functions for interacting
    with that object in the local DB."
-  (let ((table-name (string-downcase (string name))))
+  (let ((table-name (string-downcase (string name)))
+        (get-fields (lambda (fields publicp)
+                      (remove-if-not (lambda (field)
+                                       (eq publicp (getf (cdr field) :public)))
+                                     fields))))
     `(progn
        ;; create the schema entry for this object
        (push (generate-schema-entry ',table-name ',fields ',(getf meta :indexes)) *schema*)
 
        ;; create an honest to god CLOS class for this object
-       (defclass ,name (db-object) ())
+       (defclass ,name (db-object)
+         ((public-fields
+            :accessor public-fields
+            :initform ',(mapcar 'car (funcall get-fields fields t)))
+          (private-fields
+            :accessor private-fields
+            :initform ',(mapcar 'car (funcall get-fields fields nil)))
+          ,@(getf meta :extra-fields)))
 
        ;; create a method that returns this object's DB table.
        (defmethod table ((obj ,name))
@@ -125,7 +129,7 @@
   "Open a Turtl user database."
   (when *db*
     (error 'db-already-open :msg "A database is already open. Close it first."))
-  (ensure-directories-exist #P"~/.turtl/")
+  (ensure-directories-exist "~/.turtl/")
   (let ((db-name (format nil "~~/.turtl/user-~a.db" user-id)))
     (vom:info "opening user db (~a)" db-name)
     (setf *db* (sqlite:connect db-name))))

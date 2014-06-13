@@ -74,12 +74,13 @@
   (vom:debug1 "trigger: ~a" (ev event))
   (event-glue:trigger event :dispatch dispatch))
 
-(defmacro with-bind ((event event-bind &optional (send-response-bind (gensym "send-response-bind"))) &body body)
+(defmacro with-bind ((event event-bind &optional (send-response-bind (gensym "send-response-bind")) (unique t)) &body body)
   "Nicer syntax for bind function."
   (let ((event-sym (gensym "bind")))
     `(let ((,event-sym ,event))
        (bind ,event-sym
          (lambda (,event-bind)
+           (declare (ignorable ,event-bind))
            (vom:debug "event fired: ~a" (ev ,event-bind))
            (flet ((,send-response-bind (revent)
                     ;; overwrite the response event's ID with the original
@@ -89,7 +90,11 @@
                (progn ,@body)
                (t (e)
                  (vom:error "with-bind: ~a: ~a" ',event-sym e)
-                 (,send-response-bind (event "error" :data (format nil "~a" e)))))))))))
+                 (let ((msg (if (typep e 'turtl-error)
+                                (turtl-error-msg e)
+                                (format nil "~a" e))))
+                   (,send-response-bind (event "error" :data msg)))))))
+         :name ,(when unique event)))))
 
 (defun push-event (event &key (dispatch *remote-dispatch*))
   "Safely push an event into the queue (from any thread). Note that we use our
@@ -99,15 +104,16 @@
            (type turtl-dispatch dispatch))
   (bt:with-lock-held ((dispatch-queue-lock dispatch))
     (push event (dispatch-queue dispatch)))
-  (let ((cl-async-base:*event-base* *turtl-event-loop*))
-    (as:delay (lambda () (event-handler)) :time 0))
+  ;; let the event loop know we got a message
+  (as:with-threading-context (:io nil)
+    (as:delay 'event-handler :time 0))
   nil)
 
 (defun event-handler (&key (dispatch *remote-dispatch*))
   "Do a threadsafe copy of all pending events, wipe pending events, and process
    what we copied event-by-event. Note that by default we use the remote
    dispatch object."
-  (declare (optimize (speed 3) (safety 1))
+  (declare (optimize (speed 3) (safety 0) (debug 0))
            (type turtl-dispatch dispatch))
   (vom:debug4 "running event-handler")
   (let ((events nil))

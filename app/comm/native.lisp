@@ -21,6 +21,9 @@
 
 (cffi:defcallback (msg-from-ui :convention :cdecl) :void ((length :unsigned-long) (data :pointer))
   "Called from our UI system when it sends us a message."
+  ;; TODO: handle creation of event object in core thread. this way the UI can
+  ;; push the event as a string then return immediately. responsive UI is the
+  ;; primary goal.
   (handler-case
     (let* ((str (cffi:foreign-string-to-lisp data :count length))
            (event-hash (yason:parse str))

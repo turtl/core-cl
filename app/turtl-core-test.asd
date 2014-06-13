@@ -11,5 +11,6 @@
     ((:file "main")
      (:file "crypto")
      (:file "mvc")
-     (:file "protected")))))
+     (:file "protected")
+     (:file "models/user")))))
 

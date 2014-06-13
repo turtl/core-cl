@@ -10,10 +10,17 @@
    (dispatch :accessor dispatch :initform (make-dispatch)))
   (:documentation "The base class for all MVC objects."))
 
-(defgeneric mserialize (model &key &allow-other-keys)
+(defgeneric minit (mvc-object)
+  (:documentation
+    "Generic initialization function for MVC objects."))
+
+(defgeneric mserialize (mvc-object &key &allow-other-keys)
   (:documentation
     "Serialize an MVC object (model/collection) into its basic types (hashes,
      lists, atoms)"))
 
+(defgeneric mclear (mvc-object)
+  (:documentation "Clear out a model/collection's data."))
 
+(defmethod minit ((object mvc-base)) 'override-me)
 

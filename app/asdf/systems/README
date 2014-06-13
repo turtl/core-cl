@@ -14,6 +14,7 @@ cl-libevent2
 cl-nettle
 cl-ppcre-2.0.7
 cl-sqlite-20130615-git
+defstar-20140425-git
 drakma-1.3.8
 drakma-async
 event-glue

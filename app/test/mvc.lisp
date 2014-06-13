@@ -5,6 +5,10 @@
 (defclass dogs (collection)
   ((model-type :accessor model-type :initform 'dog)))
 
+(defclass shiba (dog) ())
+(defclass shibas (dogs)
+  ((model-type :accessor model-type :initform 'shiba)))
+
 (test create-model/mget
   "Test creation of models and their data."
   (let ((model (create-model 'dog '(:name "wookie" :likes ("barking"
@@ -17,6 +21,19 @@
                                            ("says" "harrrr")))))
     (is (string= "kofi" (mget model "name")))
     (is (string= "harrrr" (mget model "says")))))
+
+(defmethod minit ((shiba shiba))
+  (mset shiba '(:says "harl")))
+(defmethod minit ((shibas shibas))
+  (madd shibas '(:name "kofi")))
+
+(test minit
+  "Test model/collection intialization."
+  (let ((model (create-model 'shiba))
+        (collection (create-collection 'shibas)))
+    (is (string= "harl" (mget model "says")))
+    (is (= 1 (length (models collection))))
+    (is (string= "kofi" (mget (car (models collection)) "name")))))
 
 (test mset
   "Test mset usage."

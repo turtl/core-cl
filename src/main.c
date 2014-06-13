@@ -59,7 +59,7 @@ TURTL_EXPORT int TURTL_CONV turtl_init(int nw)
 
 	if(err != Cnil)
 	{
-		cl_object errstr = cl_format(3, Cnil, c_string_to_object("\"err: ~a\""), err);
+		cl_object errstr = cl_format(3, Cnil, c_string_to_object("\"~a\""), err);
 		int i;
 		for(i = 0; i < errstr->string.dim; i++)
 		{

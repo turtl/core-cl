@@ -1,6 +1,7 @@
 (in-package :turtl-core)
 
-(define-condition api-error (turtl-error) ()
+(define-condition api-error (turtl-error)
+  ((status :initarg :status :accessor api-error-status :initform nil))
   (:documentation "Describes an API error."))
 
 (defclass api-data ()
@@ -28,9 +29,16 @@
   (let* ((need-auth (api-auth-needed method resource))
          (url (concatenate 'string (api-url *api-data*) resource))
          (client-header `("X-Turtl-Client" . ,(format nil "~a-~a" *client* *version*)))
-         (data (if (hash-table-p data)
-                   (alexandria:hash-table-alist data)
-                   data)))
+         (data (cond ((hash-table-p data)
+                      (hash-to-alist data))
+                     ((and (listp data)
+                           (typep (car data) 'keyword))
+                      (let ((res nil))
+                        (loop for (k v) on data by #'cddr do
+                          (push (cons (string-downcase (string k)) v) res))
+                        res))
+                     (t
+                      data))))
     (push client-header headers)
     (when need-auth
       (let* ((auth-str (format nil "user:~a" (api-auth *api-data*)))
@@ -51,7 +59,7 @@
                     obj)
                (finish future obj status headers))
               (t
-               (signal-error future (make-instance 'api-error :msg res-str))))))))
+               (signal-error future (make-instance 'api-error :status status :msg res-str))))))))
 
 (defun set-api-auth (user-auth)
   "Register a user's auth with the API."

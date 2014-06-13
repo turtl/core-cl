@@ -11,7 +11,7 @@
          (err nil)
          (future (make-future))
          (event (as:make-event (lambda ()
-                                  (vom:debug1 "do-work: completed")
+                                  (vom:debug2 "do-work: completed")
                                   (if err
                                       (signal-error future err)
                                       (apply 'finish (append (list future)
@@ -25,7 +25,7 @@
           (t (e)
             (setf err e)))
         (as:add-event event :activate t)))
-    (vom:debug1 "do-work: queuing" 'operation)
+    (vom:debug2 "do-work: queuing" 'operation)
     future))
 
 (defmacro work (&body body)

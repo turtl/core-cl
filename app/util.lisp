@@ -16,7 +16,7 @@
   (let ((diff 2208988800))  ; (encode-universal-time 0 0 0 1 1 1970 0)
     (- (get-universal-time) diff)))
 
-(defmacro defafun (name (future-var &key (forward-errors t)) args &body body)
+(defmacro def-async-function (type name (future-var &key (forward-errors t)) args &body body)
   "Define an asynchronous function with a returned future that will be finished
    when the function completes. Also has the option to forward all async errors
    encountered during excution (in this lexical scope) to the returned future."
@@ -28,7 +28,7 @@
                (eq (caar body) 'declare))
       (setf declare (car body))
       (setf body (cdr body)))
-    `(defun ,name ,args
+    `(,type ,name ,args
        ,(if (stringp docstring) docstring "")
        ,declare
        (let ((,future-var (make-future)))
@@ -48,6 +48,14 @@
               `(progn ,@body))
          ,future-var))))
 
+(defmacro defafun (name (future-var &key (forward-errors t)) args &body body)
+  `(def-async-function defun ,name (,future-var :forward-errors ,forward-errors)
+                       ,args ,@body))
+
+(defmacro defamethod (name (future-var &key (forward-errors t)) args &body body)
+  `(def-async-function defmethod ,name (,future-var :forward-errors ,forward-errors)
+                       ,args ,@body))
+
 (defun jprint (db-result &key (stream *standard-output*))
   "Pretty printer for JSON (mainly for database results)."
   (yason:encode db-result (yason:make-json-output-stream stream :indent 2)))
@@ -63,4 +71,12 @@
 (defun get-num-cores ()
   "Gets the number of CPUs/cores on the current device."
   4)
+
+(defun hash-to-alist (hash-table)
+  "Recursive conversion from a hash table to an alist."
+  (loop for k being the hash-keys of hash-table
+        for v being the hash-values of hash-table
+        collect (cons k (if (hash-table-p v)
+                            (hash-to-alist v)
+                            v))))
 

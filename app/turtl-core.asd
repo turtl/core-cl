@@ -10,7 +10,6 @@
    (:file "config" :depends-on ("package"))
    (:file "util" :depends-on ("package" "config"))
    (:file "event" :depends-on ("package" "util" "config"))
-   (:file "globals" :depends-on ("package" "util" "config"))
    (:module comm
     :depends-on ("package" "util" "config" "event")
     :serial t
@@ -31,6 +30,8 @@
        (:file "model")
        (:file "collection")))
      (:file "protected")
+     (:file "mvc-api-adapter")
+     (:file "mvc-db-adapter")
      (:file "storage")))
    (:module models
     :depends-on ("package" "util" "event" library)
@@ -46,5 +47,11 @@
      (:file "profile")
      (:file "sync")
      (:file "user")))
-   (:file "main" :depends-on ("package" "comm" "util" "event"))))
+   (:module controllers
+    :depends-on ("package" "util" "event" library models)
+    :serial t
+    :components
+    ((:file "user")))
+   (:file "main" :depends-on ("package" comm "util" "event"))
+   (:file "turtl" :depends-on ("package" "event" controllers models))))
 

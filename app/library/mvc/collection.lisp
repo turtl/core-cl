@@ -19,9 +19,6 @@
 (defgeneric mrem (collection model)
   (:documentation "Remove a model from a collection."))
 
-(defgeneric mclear (collection)
-  (:documentation "Remove all models from a collection."))
-
 (defgeneric mreset (collection data &key append)
   (:documentation "Reset the collection with new data (or append it)."))
 
@@ -32,9 +29,9 @@
   "Create a collection of type type with the given data."
   (let* ((collection (make-instance type))
          (model-type (model-type collection)))
+    (minit collection)
     (when data
-      (setf (models collection) (mapcar (lambda (d)
-                                          (create-model model-type d))
+      (setf (models collection) (mapcar (lambda (d) (create-model model-type d))
                                         data)))
     collection))
 

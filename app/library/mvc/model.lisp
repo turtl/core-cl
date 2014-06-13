@@ -25,15 +25,16 @@
 (defgeneric munset (model field)
   (:documentation "Unset a field in a model."))
 
-(defgeneric mclear (model)
-  (:documentation "Clear out a model's data."))
-
 (defgeneric mdestroy (model)
   (:documentation "Destroy a model."))
+
+(defmethod yason:encode ((model model) &optional (stream *standard-output*))
+  (yason:encode (mserialize model)))
 
 (defun create-model (type &optional data)
   "Create a model of type type with the given data."
   (let ((model (make-instance type)))
+    (minit model)
     (when data
       (mset model data))
     model))
