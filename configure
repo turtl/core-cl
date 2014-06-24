@@ -138,7 +138,7 @@ echo "  ECL exe:      $ECL_EXE"
 echo
 echo "Generating Makefiles."
 
-MAKEFILES=(./Makefile.in ./src/Makefile.in ./app/Makefile.in ./node_modules/turtl/Makefile.in)
+MAKEFILES=(./Makefile.in ./src/Makefile.in ./app/Makefile.in)
 for mf in "${MAKEFILES[@]}"; do
 	if [ ! -f $mf ]; then
 		echo "Missing makefile: $mf"
