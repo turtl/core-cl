@@ -1,4 +1,4 @@
-SUBDIRS = build node_modules/turtl app
+SUBDIRS = build app
 BUILDDIRS = $(SUBDIRS:%=build-%)
 CLEANDIRS = $(SUBDIRS:%=clean-%)
 
@@ -13,7 +13,7 @@ $(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
 
 distclean: clean
-	rm -f Makefile build/Makefile node_modules/turtl/Makefile app/Makefile
+	rm -f Makefile build/Makefile app/Makefile
 
 .PHONY: subdirs $(SUBDIRS)
 .PHONY: subdirs $(BUILDDIRS)
