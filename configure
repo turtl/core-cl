@@ -6,7 +6,6 @@
 ECL_BIN_PATH=""
 ECL_INC_PATH=""
 ECL_LIB_PATH=""
-NW_TARGET=0.9.2
 
 function guess_ecl_bin_path {
 	if [ "$ECL_BIN_PATH" != "" ]; then
@@ -80,7 +79,6 @@ function print_help {
 	echo "  --ecl-bin-path [path]       Set the path that contains the ECL binaries."
 	echo "  --ecl-include-path [path]   Set the path to ECL's headers."
 	echo "  --ecl-lib-path [path]       Set the path to ECL's libs (libecl.so/ecl.dll)."
-	echo "  --nw-target [version]       The Node-webkit version to build against (default $NW_TARGET)."
 	echo
 	echo "Note that setting --ecl-bin-path will help the configure script find the"
 	echo "rest of the ECL directories, assuming you didn't split them up."
@@ -103,10 +101,6 @@ while test -n "$1"; do
 			;;
 		--ecl-lib-path)
 			ECL_LIB_PATH=$2
-			shift
-			;;
-		--nw-target)
-			NW_TARGET=$2
 			shift
 			;;
         *)
@@ -151,7 +145,6 @@ for mf in "${MAKEFILES[@]}"; do
 	sed -i "s|@ecl_inc@|${ECL_INC_PATH}|g" $real
 	sed -i "s|@ecl_lib@|${ECL_LIB_PATH}|g" $real
 	sed -i "s|@ecl_exe@|${ECL_EXE}|g" $real
-	sed -i "s|@nw_target@|${NW_TARGET}|g" $real
 	echo "  generated $real"
 done
 
