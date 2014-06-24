@@ -37,7 +37,7 @@ exe: main.o
 
 main.o:
 
-	$(CC) ../src/main.c -c $(CFLAGS) -o main.o
+	$(CC) main.c -c $(CFLAGS) -o main.o
 
 clean:
 
