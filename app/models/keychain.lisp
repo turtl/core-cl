@@ -1,11 +1,27 @@
 (in-package :turtl-core)
 
-(define-db-object keychain
-  (("id"        :public t :type :pkey)
-   ("type"      :public t :type :string)
-   ("item_id"   :public t :type :id)
-   ("user_id"   :public t :type :id)
-   ("k"))
-  (:indexes
-     (("item_id.v1" . ("item_id")))))
+(deftobject keychain-entry "keychain"
+            ("id"
+             "type"
+             "item_id"
+             "user_id")
+            ("k"))
+
+(defmethod minit ((model keychain-entry))
+  (setf (key model) (key *user*))
+  (call-next-method))
+
+(defclass keychain (collection)
+  ((model-type :accessor model-type :initform 'keychain-entry)))
+
+(defgeneric find-keychain-entry (keychain id)
+  (:documentation "Find an entry for an item in the keychain by ID."))
+
+(defmethod find-keychain-entry ((keychain keychain) id)
+  (let ((entry (mfind keychain id :field "item_id")))
+    (vom:debug1 "keychain: find entry: ~a: ~a" id (if entry (mid entry) nil))
+    (when entry
+      (let ((key (mget entry "k")))
+        (when key
+          (from-base64 key))))))
 

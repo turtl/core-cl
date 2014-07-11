@@ -22,17 +22,19 @@
 (defgeneric mreset (collection data &key append)
   (:documentation "Reset the collection with new data (or append it)."))
 
-(defgeneric mfind (collection id)
-  (:documentation "Find a model in this collection with the given ID."))
+(defgeneric mfind (collection value &key field test)
+  (:documentation "Find a model in this collection with the given ID/field."))
+
+(defgeneric mfilter (collection field value &key test)
+  (:documentation "Find all models with the corresponding field/value pair."))
 
 (defun create-collection (type &optional data)
   "Create a collection of type type with the given data."
-  (let* ((collection (make-instance type))
-         (model-type (model-type collection)))
+  (let* ((collection (make-instance type)))
     (minit collection)
     (when data
-      (setf (models collection) (mapcar (lambda (d) (create-model model-type d))
-                                        data)))
+      (dolist (item data)
+        (madd collection item)))
     collection))
 
 (defun forward-event (collection model event)
@@ -66,7 +68,7 @@
     (push model (models collection))
     (msort collection)    ; brute force sort
     (bind :* (lambda (event) (forward-event collection model event))
-          :name (format nil "collection:~a:listen:model:all" (cid collection))
+          :name (format nil "collection:~a:listen:model:all" (mcid collection))
           :dispatch (dispatch model))
     (trigger (event "add" :data model) :dispatch (dispatch collection))))
 
@@ -76,7 +78,7 @@
       ;; unreference the model from the collection
       (setf (collections model) (remove collection (collections model) :test 'eq))
       (setf (models collection) (remove model (models collection) :test 'eq))
-      (unbind :* (format nil "collection:~a:listen:model:all" (cid collection))
+      (unbind :* (format nil "collection:~a:listen:model:all" (mcid collection))
               :dispatch (dispatch model))
       (trigger (event "remove") :dispatch (dispatch collection)))))
 
@@ -93,7 +95,11 @@
     (madd collection item))
   (trigger (event "reset") :dispatch (dispatch collection)))
 
-(defmethod mfind ((collection collection) id)
-  (find-if (lambda (m) (equal (mid m) id))
+(defmethod mfind ((collection collection) value &key (field "id") (test 'equal))
+  (find-if (lambda (m) (funcall test (mget m field) value))
            (models collection)))
+
+(defmethod mfilter ((collection collection) field value &key (test 'equal))
+  (remove-if-not (lambda (m) (funcall test (mget m field) value))
+                 (models collection)))
 

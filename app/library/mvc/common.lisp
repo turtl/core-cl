@@ -6,7 +6,7 @@
   "Function that generates TMP ids")
 
 (defclass mvc-base ()
-  ((cid :accessor cid :initform (funcall *next-mvc-cid*))
+  ((cid :accessor mcid :initform (funcall *next-mvc-cid*))
    (dispatch :accessor dispatch :initform (make-dispatch)))
   (:documentation "The base class for all MVC objects."))
 

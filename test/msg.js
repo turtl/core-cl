@@ -1,4 +1,4 @@
-var TurtlEvent	=	require('../TurtlEvent');
+var TurtlEvent	=	require('../../desktop/TurtlEvent');
 
 var test_bind	=	function()
 {
@@ -51,6 +51,10 @@ var test_easy	=	function()
 	// pipe remote events into local trigger
 	Remote.bind(Event.trigger);
 
+	Event.bind('ping', function() {
+		console.log('node: got ping.');
+	});
+
 	TurtlEvent.start();
 
 	var req	=	function(event) {
@@ -58,11 +62,13 @@ var test_easy	=	function()
 			console.log('js: response: ', response);
 		});
 	};
-	return function() {
-		req({ev: 'http', data: 'https://api.turtl.it'});
+	return function(ev) {
+		ev || (ev = {ev: 'http', data: 'https://api.turtl.it'});
+		req(ev);
 	};
 }
 
 exports.bind		=	test_bind;
 exports.response	=	test_response;
 exports.easy		=	test_easy;
+

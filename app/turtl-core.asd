@@ -6,6 +6,7 @@
   :depends-on (#-ecl :turtl-pkg)
   :components
   (#+ecl (:compiled-file "turtl-pkg" :pathname #p"./turtl-pkg.fas")
+   ;#+ecl (:compiled-file "turtl-core" :pathname #p"./turtl-core.fas")
    (:file "package")
    (:file "config" :depends-on ("package"))
    (:file "util" :depends-on ("package" "config"))
@@ -32,7 +33,8 @@
      (:file "protected")
      (:file "mvc-api-adapter")
      (:file "mvc-db-adapter")
-     (:file "storage")))
+     (:file "turtl-model")
+     (:file "search")))
    (:module models
     :depends-on ("package" "util" "event" library)
     :serial t

@@ -12,7 +12,7 @@
 
 (defvar *remote-forward-fn*
   (lambda (event)
-    (vom:debug1 "forwarding from remote to global: ~a" event)
+    (vom:debug2 "forwarding from remote to global: ~a" event)
     ;; mark the event as a "remote" event before sending it off to *dispatch*
     (setf (gethash "remote" (meta event)) t)
     *dispatch*) 
@@ -71,10 +71,13 @@
 
 (defun trigger (event &key (dispatch *dispatch*))
   "Trigger a local event."
-  (vom:debug1 "trigger: ~a" (ev event))
+  (vom:debug2 "trigger: ~a" (ev event))
   (event-glue:trigger event :dispatch dispatch))
 
-(defmacro with-bind ((event event-bind &optional (send-response-bind (gensym "send-response-bind")) (unique t)) &body body)
+(defmacro with-bind ((event event-bind &key
+                            (unique t)
+                            (dispatch 'event-glue:*dispatch*))
+                     &body body)
   "Nicer syntax for bind function."
   (let ((event-sym (gensym "bind")))
     `(let ((,event-sym ,event))
@@ -82,25 +85,22 @@
          (lambda (,event-bind)
            (declare (ignorable ,event-bind))
            (vom:debug "event fired: ~a" (ev ,event-bind))
-           (flet ((,send-response-bind (revent)
-                    ;; overwrite the response event's ID with the original
-                    (setf (id revent) (id ,event-bind))
-                    (trigger-remote revent)))
-             (future-handler-case
-               (progn ,@body)
-               (t (e)
-                 (vom:error "with-bind: ~a: ~a" ',event-sym e)
-                 (let ((msg (if (typep e 'turtl-error)
-                                (turtl-error-msg e)
-                                (format nil "~a" e))))
-                   (,send-response-bind (event "error" :data msg)))))))
-         :name ,(when unique event)))))
+           (future-handler-case
+             (progn ,@body)
+             (t (e)
+               (vom:error "with-bind: ~a: ~a" ,event-sym e)
+               (let ((msg (if (typep e 'turtl-error)
+                              (turtl-error-msg e)
+                              (format nil "~a" e))))
+                 (trigger-remote (event "error" :uuid (id ,event-bind) :data msg))))))
+         :name ,(when unique event)
+         :dispatch ,dispatch))))
 
 (defun push-event (event &key (dispatch *remote-dispatch*))
   "Safely push an event into the queue (from any thread). Note that we use our
    remote dispatch by default here."
   (declare (optimize (speed 3) (safety 1))
-           (type turtl-event event)
+           (type string event)
            (type turtl-dispatch dispatch))
   (bt:with-lock-held ((dispatch-queue-lock dispatch))
     (push event (dispatch-queue dispatch)))
@@ -122,6 +122,8 @@
         (setf events (copy-list (dispatch-queue dispatch)))
         (setf (dispatch-queue dispatch) nil)))
     (when events
-      (dolist (event (nreverse events))
-        (trigger event :dispatch dispatch)))))
+      (dolist (str (nreverse events))
+        (let* ((event-hash (yason:parse str))
+               (event (event-from-hash event-hash)))
+          (trigger event :dispatch dispatch))))))
 

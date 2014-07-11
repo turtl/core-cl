@@ -14,6 +14,6 @@
   (let* ((auth-js "bv+f8HySAzEU+8RCslsKXXCpOeKb9+pOcsbnTa3Uz1itfw9Hjjdim8ObYePUFjeCSExYElupJOklDLKsSMsTSZRH2DKUWnv7pDfXXHI6Ogg=:i6f6d6734633238313938373234396265")
          (user (create-model 'user '(:username "omg"
                                      :password "wookie")))
-         (auth-lisp (babel:octets-to-string (generate-auth user))))
+         (auth-lisp (generate-auth user)))
     (is (string= auth-js auth-lisp))))
 

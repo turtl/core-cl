@@ -36,6 +36,7 @@
                 :munset
                 :mclear
                 :mdestroy
+                :mclone
                 :create-model
                 :msort
                 :madd
@@ -43,6 +44,7 @@
                 :mclear
                 :mreset
                 :mfind
+                :mfilter
                 :create-collection
                 
                 ;; protected
@@ -53,6 +55,8 @@
                 :private-fields
                 :raw-data
                 :mdeserialize
+                :madd-async
+                :mreset-async
                 
                 ;; models
                 :user

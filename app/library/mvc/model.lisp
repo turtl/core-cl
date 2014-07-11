@@ -28,6 +28,20 @@
 (defgeneric mdestroy (model)
   (:documentation "Destroy a model."))
 
+(defgeneric mclone (model &optional type)
+  (:documentation
+    "Clone a model into a new object. Cloning does not insert the new model into
+     the locations of the cloned (ie in the collections it's in). It just clones
+     the model's data and return a new instance."))
+
+;; the following generics are meant to be overridden on a per-model basis
+(defgeneric msync (method model &key &allow-other-keys)
+  (:documentation "Model sync function."))
+(defgeneric msave (model)
+  (:documentation "Save a model."))
+(defgeneric mfetch (model)
+  (:documentation "Fetch a model."))
+
 (defmethod yason:encode ((model model) &optional (stream *standard-output*))
   (yason:encode (mserialize model)))
 
@@ -43,10 +57,13 @@
   (data model))
 
 (defmethod mid ((model model) &optional strict)
-  (let ((id (gethash "id" (data model))))
+  (let ((id (mget model "id")))
     (cond (id id)
           (strict nil)
-          (t (cid model)))))
+          (t (mcid model)))))
+
+(defmethod (setf mid) (val (model model))
+  (mset model (list :id val)))
 
 (defmethod mget ((model model) field &optional default)
   (multiple-value-bind (value exists)
@@ -67,7 +84,7 @@
                           :dispatch (dispatch model))))))
       (cond ((listp data)
              (loop for (k v) on data by #'cddr do
-               (do-set (string-downcase (string k)) v)))
+               (do-set (string-downcase (cl-ppcre:regex-replace-all "-" (string k) "_")) v)))
             ((hash-table-p data)
              (loop for k being the hash-keys of data
                    for v being the hash-values of data do
@@ -95,4 +112,15 @@
   (mclear model)
   (trigger (event "destroy") :dispatch (dispatch model))
   (wipe :dispatch (dispatch model)))
+
+(defmethod mclone ((model model) &optional type)
+  (let* ((type (if type
+                   type
+                   (type-of model))))
+    (create-model type (clone-object (data model)))))
+
+;; override me
+(defmethod msync (method (model model) &key) nil)
+(defmethod msave ((model model)) nil)
+(defmethod mfetch ((model model)) nil)
 

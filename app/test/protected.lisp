@@ -15,11 +15,13 @@
     (setf (key model) key)
     (with-running-test
       (future-handler-case
-        (alet ((des (mset model data)))
-          (setf deserialized des))
-        (t (e) (setf err e))))
+        (wait-for (mset model data)
+          (setf deserialized (mget model "tags")))
+        (t (e)
+          (format t "err: ~a~%" e)
+          (setf err e))))
     (is (eq nil err))
-    (is (find "flower" (gethash "tags" deserialized) :test 'string=))))
+    (is (find "flower" deserialized :test 'string=))))
 
 (test serialize
   "Test serializing a model's private fields."
@@ -38,4 +40,46 @@
     (let ((dec (decrypt (key model) (from-base64 (gethash (body-key model) serialized)))))
       (is (string= "{\"text\":\"Sha na na na na, sha na na na. (what the hell are you doing) Get a job.\"}"
                    (babel:octets-to-string dec))))))
+
+(test madd-async
+  "Test adding a model to a collection async."
+  (let ((data (hu:hash ("name" "vince") ("advice" "you've got to accessorize, howard.")))
+        (collection (create-collection 'collection))
+        (count nil)
+        (err nil))
+    (with-running-test
+      (future-handler-case
+        (wait-for (madd-async collection data)
+          (setf count (length (models collection))))
+        (t (e) (setf err e))))
+    (is (= 1 count))
+    (is (null err))))
+
+(test (mreset-async :depends-on madd-async)
+  "Test resetting data into a collection async."
+  (let ((items (loop for i from 0 to 9 collect (hu:hash ("age" i))))
+        (collection (create-collection 'collection))
+        (count nil)
+        (err nil))
+    (with-running-test
+      (future-handler-case
+        (wait-for (mreset-async collection items)
+          (setf count (length (models collection))))
+        (t (e) (setf err e))))
+    (is (= 10 count))
+    (is (null err))))
+
+(test (mreset-async-noitems :depends-on mreset-async)
+  "Test that resetting and empty data set async into a collection actually
+   finishes the future it's supposed to."
+  (let ((collection (create-collection 'collection))
+        (err nil)
+        (is-set nil))
+    (with-running-test
+      (future-handler-case
+        (wait-for (mreset-async collection (list))
+          (setf is-set t))
+        (t (e) (setf err e))))
+    (is (eq t is-set))
+    (is (null err))))
 

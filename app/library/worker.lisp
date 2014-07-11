@@ -25,7 +25,7 @@
           (t (e)
             (setf err e)))
         (as:add-event event :activate t)))
-    (vom:debug2 "do-work: queuing" 'operation)
+    (vom:debug2 "do-work: queuing")
     future))
 
 (defmacro work (&body body)

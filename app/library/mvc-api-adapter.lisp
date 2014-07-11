@@ -1,25 +1,12 @@
 (in-package :turtl-core)
 
-(defclass api-model (model)
+(defclass api-model (protected)
   ((url :accessor url :initform "/my-model"))
   (:documentation
     "Describes a model that syncs with the Turtl API using some basic commands."))
 
-(defgeneric msync (method model &key &allow-other-keys)
-  (:documentation
-    "API sync function for models."))
-
-(defgeneric msave (model)
-  (:documentation
-    "Save a model to the API."))
-
-(defgeneric mfetch (model)
-  (:documentation
-    "Fetch a model from the API."))
-
 (defamethod msync (future) ((method keyword) (model api-model) &key)
-  (alet* ((id (mid model))
-          (data nil))
+  (alet* ((id (mid model)))
     (when (and (eq method :delete)
                (not id))
       (finish future nil)
@@ -64,5 +51,7 @@
     (unless id
       (finish future nil)
       (return-from mfetch future))
-    (finish future (msync :get model))))
+    (alet* ((data (msync :get model))
+            (nil (mset model data)))
+      (finish future model))))
 

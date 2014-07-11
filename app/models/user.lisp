@@ -1,13 +1,13 @@
 (in-package :turtl-core)
 
-(define-db-object user
-  (("id"        :public t :type :pkey)
-   ("settings"  :type :object))
-  (:extra-fields
-    ((logged-in :accessor logged-in :initform nil))))
+(deftobject user "users"
+            ("id")
+            ("settings")
+            ((logged-in :accessor logged-in :initform nil)))
 
 (defun login (user)
   "Log the passed user in."
+  (setf (logged-in user) t)
   (trigger (event "login") :dispatch (dispatch user)))
 
 (defun logout (user)
@@ -30,7 +30,7 @@
                                      (babel:string-to-octets ":a_pinch_of_salt"))
                         400
                         32)))
-      (mset user `(:key ,key))
+      (setf (key user) key)
       key)))
 
 (defmethod generate-auth ((user user))
@@ -49,7 +49,7 @@
            (iv (make-iv (concatenate 'nec:octet-array
                                      username
                                      (babel:string-to-octets "4c281987249be78a"))))
-           (auth (encrypt key intermediary :version 0 :iv iv)))
+           (auth (babel:octets-to-string (encrypt key intermediary :version 0 :iv iv))))
       (mset user `(:auth ,auth))
       auth)))
 
@@ -58,6 +58,7 @@
   (set-api-auth (generate-auth user))
   (future-handler-case
     (alet ((user-id (api :post "/auth" nil)))
+      (setf (mid user) user-id)
       (finish future user-id))
     (api-error ()
       (finish future nil))))

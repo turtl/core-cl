@@ -45,12 +45,14 @@
              (encoded (cl-base64:string-to-base64-string auth-str))
              (auth-header `("Authorization" . ,(format nil "Basic ~a" encoded))))
         (push auth-header headers)))
+    (vom:debug "api: ~s ~a (~a)" method resource url)
     (multiple-future-bind (res status headers)
         (drakma-async:http-request
           url
           :method method
           :parameters data
           :additional-headers headers)
+      (vom:debug "api: res: (~a) ~s ~a" status method resource)
       (let* ((res-str (if (stringp res)
                           res
                           (babel:octets-to-string res :encoding :utf-8)))

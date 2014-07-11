@@ -56,9 +56,11 @@
   `(def-async-function defmethod ,name (,future-var :forward-errors ,forward-errors)
                        ,args ,@body))
 
-(defun jprint (db-result &key (stream *standard-output*))
+(defun jprint (db-result &key (pretty t) (stream *standard-output*))
   "Pretty printer for JSON (mainly for database results)."
-  (yason:encode db-result (yason:make-json-output-stream stream :indent 2)))
+  (let ((res (with-output-to-string (s)
+               (yason:encode db-result (yason:make-json-output-stream s :indent (if pretty 2 nil))))))
+    (format stream res)))
 
 (defmacro with-test (&body body)
   "Makes testing async functions easier by abstracting an extremely common
@@ -79,4 +81,11 @@
         collect (cons k (if (hash-table-p v)
                             (hash-to-alist v)
                             v))))
+
+(defun clone-object (object)
+  "Perform a deep clone of an object. Probably not the most efficient way, but
+   most certainly the easiest on my fingers."
+  (yason:parse
+    (with-output-to-string (s)
+      (yason:encode object s))))
 

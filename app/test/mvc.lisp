@@ -3,7 +3,11 @@
 
 (defclass dog (model) ())
 (defclass dogs (collection)
-  ((model-type :accessor model-type :initform 'dog)))
+  ((model-type :accessor model-type :initform 'dog)
+   (sort-function :accessor sort-function :initform (lambda (a b)
+                                                      (let ((a-id (write-to-string (or (mid a) 0)))
+                                                            (b-id (write-to-string (or (mid b) 0))))
+                                                        (string< a-id b-id))))))
 
 (defclass shiba (dog) ())
 (defclass shibas (dogs)
@@ -58,6 +62,19 @@
     (is (eq nil (mget model "name")))
     (is (= 0 (hash-table-count (data model))))))
 
+(test model-clone
+  "Test cloning a model."
+  (let* ((model1 (create-model 'dog '(:name "timmy" :says "gfff" :friends ("wookie" "lucy"))))
+         (model2 (mclone model1))
+         (model3 (mclone model1 'shiba)))
+    (is (not (eq (gethash "friends" (data model1)) (gethash "friends" (data model2)))))
+    (is (not (eq (gethash "friends" (data model1)) (gethash "friends" (data model3)))))
+    (is (not (eq (gethash "friends" (data model2)) (gethash "friends" (data model3)))))
+    (is (equalp '("wookie" "lucy") (gethash "friends" (data model2))))
+    (is (equalp '("wookie" "lucy") (gethash "friends" (data model3))))
+    (is (eq 'dog (type-of model2)))
+    (is (eq 'shiba (type-of model3)))))
+  
 (test model-events
   "Test that models trigger events properly."
   (let ((model (create-model 'dog))
@@ -99,6 +116,17 @@
       (is (typep model 'dog))
       (is (stringp (mget model "name"))))))
 
+(test collection-triggering
+  "Collection should trigger events of models."
+  (let ((collection (create-collection 'dogs '((:name "wookie")
+                                               (:name "timmy")
+                                               (:name "lucy"))))
+        (likes nil))
+    (bind "change:likes" (lambda (ev) (setf likes (data ev)))
+          :dispatch (dispatch collection))
+    (mset (car (models collection)) '("likes" "barking"))
+    (is (string= "barking" likes))))
+
 (test collection-sorting
   "Make sure sorting works properly."
   (let ((collection (create-collection 'dogs)))
@@ -132,7 +160,21 @@
   (let ((collection (create-collection 'dogs '((:id 123 :name "barky")
                                                (:id 666 :name "satany")
                                                (:id 999 :name "obsessed")))))
-    (let ((found (mfind collection 999)))
-      (is (typep found 'dog))
-      (is (string= "obsessed" (mget found "name"))))))
+    (let ((found1 (mfind collection 999))
+          (found2 (mfind collection "satany" :field "name")))
+      (is (typep found1 'dog))
+      (is (string= "obsessed" (mget found1 "name")))
+      (is (typep found2 'dog))
+      (is (= 666 (mid found2))))))
+
+(test collection-filter
+  "Test filtering models in a collection."
+  (let* ((collection (create-collection 'dogs '((:id 1 :name "barky" :likes "barking")
+                                                (:id 2 :name "wookie" :likes "denning")
+                                                (:id 3 :name "timmy" :likes "barking")
+                                                (:id 4 :name "kofi" :likes "harr"))))
+         (models (mfilter collection "likes" "barking")))
+    (is (= 2 (length models)))
+    (is (string= "barky" (mget (car models) "name")))
+    (is (string= "timmy" (mget (cadr models) "name")))))
 

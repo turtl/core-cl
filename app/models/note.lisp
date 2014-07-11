@@ -1,24 +1,27 @@
 (in-package :turtl-core)
 
-(define-db-object note
-  (("id"         :public t :type :pkey)
-   ("user_id"    :public t :type :id)
-   ("board_id"   :public t :type :id)
-   ("file"       :public t :type :object)
-   ("has_file"   :public t :type :integer)
-   ("keys"       :public t :type :object)
-   ("meta"       :public t :type :object)
-   ("sort"       :public t :type :integer)
-   ("mod"        :public t :type :integer)
-   ("type")
-   ("title")
-   ("tags")
-   ("url")
-   ("text")
-   ("embed")
-   ("color"))
-  (:indexes
-    (("user_id.v1" . ("user_id"))
-     ("board_id.v1" . ("board_id"))
-     ("has_file.v1" . ("has_file")))))
+(deftobject note "notes"
+            ("id"
+             "user_id"
+             "board_id"
+             "file"
+             "has_file"
+             "keys"
+             "meta"
+             "sort"
+             "mod")
+            ("type"
+             "title"
+             "tags"
+             "url"
+             "text"
+             "embed"
+             "color"))
+
+(defmethod find-key ((model note) keys &optional search)
+  (let* ((board-id (mget model "board_id"))
+         (board-key (ignore-errors (key (mfind (mget *profile* "boards") board-id)))))
+    (when (and board-id board-key)
+      (setf (getf search :b) `((:id ,board-id :k ,board-key))))
+    (call-next-method model keys search)))
 

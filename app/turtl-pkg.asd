@@ -12,11 +12,13 @@
                #:cl-nettle
                #:lparallel
                #:event-glue
+               #:sqlite-obj
                #:vom
                #:cl-ppcre
                #:babel
                #:sqlite
                #:drakma-async
                #:flexi-streams
-               #:yason))
+               #:yason
+               #:simple-search))
 
