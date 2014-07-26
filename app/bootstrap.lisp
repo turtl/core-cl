@@ -16,7 +16,7 @@
 (require :asdf)
 (defparameter *turtl-root* "./core/app")
 (let ((cur-dir (truename *default-pathname-defaults*))
-      (registry (truename (format nil "~a/asdf/registry/" *turtl-root*)))
+      (registry (truename (format nil "~a/../asdf/registry/" *turtl-root*)))
       (app-dir (truename (format nil "~a/" *turtl-root*))))
   (setf asdf:*central-registry* (list cur-dir registry app-dir)))
 ;; setup sockets. we really don't need the full socket lib though since all comm
@@ -32,10 +32,6 @@
     (format t "turtl: boostrap: ASDF error: ~a~%" e)
     (error e)))
 
-;(unless (fboundp 'cffi::%close-foreign-library)
-;  (defun cffi::%close-foreign-library (&rest args) (declare (ignore args))))
-
-
 ;; -----------------------------------------------------------------------------
 ;; start the app
 ;; -----------------------------------------------------------------------------
@@ -43,11 +39,9 @@
 (format t "~%~%")
 (format t "Turtl loaded (~a)~%" (ext:getpid))
 (let ((single-threaded (when (boundp 'cl-user::*turtl-single-threaded*)
-                         cl-user::*turtl-single-threaded*))
-      (push-messages (when (boundp 'cl-user::*turtl-push-messages*)
-                       cl-user::*turtl-push-messages*)))
+                         cl-user::*turtl-single-threaded*)))
   (handler-case
-    (turtl-core:start :single-thread single-threaded :push-messages push-messages)
+    (turtl-core:start :single-thread single-threaded)
     (t (e)
       (vom:error "turtl: bootstrap: ~a" e)
       (error e))))
