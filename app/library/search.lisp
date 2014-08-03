@@ -32,7 +32,8 @@
                  (:id-asc '("id"))
                  (:id-desc '("id" . :desc))
                  (:mod-asc '("mod"))
-                 (:mod-desc '("mod" . :desc))))
+                 (:mod-desc '("mod" . :desc))
+                 (t '("id"))))
          (query nil)
          (query (if board-id
                     (list (concatenate 'string "board_id:" board-id))
@@ -52,7 +53,6 @@
                     query))
          (query (when query
                   (append (list :and) query)))
-         (asdf (format t "sort: ~s~%" sort))
          (res-query (when query (simple-search:query *note-index* query :sort sort)))
          (res (cond (query res-query)
                     (t (simple-search:query *note-index*
