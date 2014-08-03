@@ -54,11 +54,6 @@ TURTL_EXPORT int TURTL_CONV turtl_init(uint8_t flags)
 		"), Cnil, OBJNULL);
 	}
 
-	if((flags >> TURTL_FLAG_PUSH_MESSAGES) & 1)
-	{
-		si_safe_eval(3, c_string_to_object("(defparameter cl-user::*turtl-push-messages* t)"), Cnil, OBJNULL);
-	}
-
 	cl_object init_form = c_string_to_object("\
 		(handler-case\
 		  (progn\
@@ -111,67 +106,6 @@ TURTL_EXPORT void TURTL_CONV turtl_shutdown()
 TURTL_EXPORT char* TURTL_CONV turtl_get_last_error()
 {
 	return turtl_last_error;
-}
-
-/**
- * Initialize our (empty) message callback functions. These are used to register
- * message passing callbacks between our lisp and UI worlds.
- */
-void turtl_void_msg_handler(unsigned long msg_length, const unsigned char *msg) { }
-int turtl_void_ui_poll_handler(void) { }
-turtl_msg_callback_t lisp_msg_handler = turtl_void_msg_handler;
-turtl_msg_callback_t ui_msg_handler = turtl_void_msg_handler;
-turtl_ui_poll_callback_t ui_poll_handler = turtl_void_ui_poll_handler;
-
-/**
- * Set our lisp message handler (for ui -> lisp messages)
- */
-TURTL_EXPORT void TURTL_CONV turtl_set_lisp_msg_handler(turtl_msg_callback_t callback)
-{
-	lisp_msg_handler = callback;
-}
-
-/**
- * Set our UI message handler (for lisp -> ui messages)
- */
-TURTL_EXPORT void TURTL_CONV turtl_set_ui_msg_handler(turtl_msg_callback_t callback)
-{
-	ui_msg_handler = callback;
-}
-
-/**
- * Pass a message from UI to lisp
- */
-TURTL_EXPORT void TURTL_CONV turtl_msg_to_lisp(unsigned long msg_length, const unsigned char *msg)
-{
-	(*lisp_msg_handler)(msg_length, msg);
-}
-
-/**
- * Pass a message from lisp to UI
- */
-TURTL_EXPORT void TURTL_CONV turtl_msg_to_ui(unsigned long msg_length, const unsigned char *msg)
-{
-	(*ui_msg_handler)(msg_length, msg);
-}
-
-/**
- * Allow the UI to poll for pending messages (as opposed to having them pushed
- * to the UI thread which can cause problems unless libuv is running). You must
- * set a ui message handler (via turtl_set_ui_msg_handler) before calling this
- * because the handler you set is called directly by this function.
- */
-TURTL_EXPORT void TURTL_CONV turtl_set_ui_msg_poll_handler(turtl_ui_poll_callback_t callback)
-{
-	ui_poll_handler = callback;
-}
-
-/**
- * Poll the UI message queue
- */
-TURTL_EXPORT int TURTL_CONV turtl_poll_ui_messages()
-{
-	return ui_poll_handler();
 }
 
 #ifdef EXE
