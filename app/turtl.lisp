@@ -48,13 +48,14 @@
     ;; reload the turtl-core app
     (:reload
       (asdf:operate 'asdf:load-op :turtl-core)
-      (trigger-remote (event "success:cmd:reload" :uuid (id ev))))
+      (res))
 
     ;; tells the core where we are going to store data files
     (:set-data-directory
       ;; convert windows paths
       (let ((pruned (cl-ppcre:regex-replace-all "\\" (hget (data ev) "path") "/")))
-        (setf *data-directory* pruned)))
+        (setf *data-directory* pruned)
+        (res)))
 
     ;; wipe the local database file(s)
     (:wipe-local-db
@@ -64,7 +65,7 @@
         (logout *user*)
         (when (probe-file db-name)
           (delete-file db-name))
-        (trigger-remote (event "success:cmd:wipe-local-db" :uuid (id ev)))))
+        (res)))
 
     ;; test the work queue by blasting some jobs at it
     (:test-work
@@ -73,11 +74,6 @@
                 (y (random 100))
                 (res (work (sleep .01) (+ x y))))
           (format t "~a + ~a = ~a~%" x y res))))
-
-    ;; reload the main work queue
-    (:reload-queue
-      (stop-queue *main-queue*)
-      (setf *main-queue* (make-queue (get-num-cores))))
 
     ;; stop the turtl-core thread
     (:stop

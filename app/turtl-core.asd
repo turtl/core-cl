@@ -52,7 +52,8 @@
     :depends-on ("package" "util" "event" library models)
     :serial t
     :components
-    ((:file "user")
+    ((:file "sync")
+     (:file "user")
      (:file "board")
      (:file "note")
      (:file "profile")))
