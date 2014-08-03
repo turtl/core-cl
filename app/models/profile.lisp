@@ -9,6 +9,12 @@
     (if sub
         sub
         (create-collection 'collection))))
+
+(defmethod mdata ((model profile))
+  (hash ("keychain" (mdata (mget model "keychain")))
+        ("personas" (mdata (mget model "personas")))
+        ("boards" (mdata (mget model "boards")))
+        ("notes" #())))
   
 (defafun persist-profile (future) (profile-data)
   "Given a set of profile data, persist it to the local DB."
@@ -31,7 +37,7 @@
   "Download and optionally persist the database."
   (trigger-remote (event "profile-loading-progress" :data "download"))
   (future-handler-case
-    (alet ((profile-data (api :get (format nil "/profiles/users/~a" (mid *user*)) nil)))
+    (alet ((profile-data (api :get (format nil "/profiles/users/~a" (mid *user*)))))
       (wait-for (when persist
                   (persist-profile profile-data))
         (finish future profile-data)))

@@ -24,7 +24,7 @@
                    (zerop (length keys)))
           (setf (hget data '("data" "keys")) "")))
       (future-handler-case
-        (attach (api method url data)
+        (attach (api method url :data data)
           (lambda (&rest vals)
             (apply 'finish (append (list future) vals))))
         (api-error (e)

@@ -53,13 +53,23 @@
       (mset user `(:auth ,auth))
       auth)))
 
-(defafun test-login (future) (user)
+(defmethod mdata ((model user))
+  (let ((data (call-next-method)))
+    (remhash "auth" data)
+    (remhash "username" data)
+    (remhash "password" data)
+    data))
+
+(defafun test-login (future) (user &key grab-data)
   "Test a user's login."
   (set-api-auth (generate-auth user))
   (future-handler-case
-    (alet ((user-id (api :post "/auth" nil)))
+    (alet* ((user-id (api :post "/auth"))
+            (data (when grab-data
+                    (api :get (format nil "/users/~a" user-id)))))
       (setf (mid user) user-id)
-      (finish future user-id))
+      (wait-for (when data (mset user data))
+        (finish future user-id)))
     (api-error ()
       (finish future nil))))
 

@@ -8,52 +8,49 @@
 (defvar *stop-event* nil
   "Holds the event used to stop Turtl.")
 
-(defvar *push-outgoing-messages* nil
-  "Whether or not we push messages to UI (not always available) or save outgoing
-   messages locally and let UI pluck them out.")
+(defvar *msg-sock* nil
+  "Holds our messaging socket.")
 
 (defun do-start (&key start-fn no-signal-handler)
   "Inits the Turtl event loop."
   (unwind-protect
-    (progn
+    (let* ((*msg-sock* (nn-socket nn:+nn-pair+))
+           (conn (nn-bind *msg-sock* *comm-url*))
+           (fd (nn-get-sock-fd *msg-sock*)))
+      (vom:debug "start: sock/conn: ~a/~a/~a" *msg-sock* conn fd)
       (setup-remote-forwarding)
       (ignore-errors (nec:random-init))
-      (setf lparallel:*kernel* (lparallel:make-kernel (get-num-cores)))
-      ;; some windowz BS (for testing standalone executables mainly)
-      (when (cffi:foreign-symbol-pointer "WSAStartup")
-        (cffi:with-foreign-object (data :char 400)
-          (cffi:foreign-funcall "WSAStartup" :uint16 #x0202 :pointer data)))
+      (setf *main-queue* (make-queue (get-num-cores)))
       (as:enable-threading-support)
       (as:with-event-loop (:catch-app-errors nil
                            :default-event-cb
                              (lambda (ev)
                                (vom:error "top-level error: ~a" ev)))
-        (vom:info "event loop started")
-        (unless no-signal-handler
-          (setf *stop-event* (as:make-event (lambda () (as:clear-signal-handlers))))
-          (as:signal-handler 2
-            (lambda (sig)
-              (declare (ignore sig))
-              (as:clear-signal-handlers))))
+        (let ((watch (as:watch-fd fd :read-cb 'recv-remote)))
+          (vom:info "event loop started")
+          (unless no-signal-handler
+            (setf *stop-event* (as:make-event (lambda ()
+                                                (as:free-event watch)
+                                                (as:clear-signal-handlers))))
+            (as:signal-handler 2
+              (lambda (sig)
+                (declare (ignore sig))
+                (as:clear-signal-handlers)))))
         (trigger-remote (event "turtl-loaded"))
         ;; if we have a start function, run it after everything has been set up
         (when start-fn
-          (as:delay start-fn :time 0))))
+          (as:delay start-fn :time 0)))
+      (nn:shutdown *msg-sock* conn)
+      (nn:close *msg-sock*))
     (vom:info "event loop ended (turtl shutting down)")
-    (lparallel:end-kernel :wait t)
+    (stop-queue *main-queue*)
     (nec:random-close)
     (setf *turtl-thread* nil)))
 
-(defun start (&key single-thread start-fn push-messages)
+(defun start (&key single-thread start-fn)
   "Starts a thread with Turtl's event loop listener."
-  (when push-messages
-    (setf *push-outgoing-messages* t))
   (unless *turtl-thread*
     (vom:info "starting turtl-core")
-    ;; listen for remote messages
-    (bind-remote-message-handler)
-    ;; listen for UI polling
-    (bind-ui-poll-handler)
     (if single-thread
         (do-start :start-fn start-fn)
         ;; create some thread-locals and start our turtl thread

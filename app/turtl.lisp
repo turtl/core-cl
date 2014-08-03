@@ -40,33 +40,48 @@
   (setf *messages* nil)
   (setf *files* nil))
 
-(with-bind ("profile-get" ev)
-  "Get an item in the profile by id."
-  (let* ((data (data ev))
-         (what (hget data "type"))
-         (id (hget data "id")))
-    (let ((model (mfind (mget *profile* what) id)))
-      (trigger-remote (event "profile-get" :data model :uuid (id ev))))))
+(with-bind ("ping" ev :response res)
+  (trigger-remote (event "pong" :uuid (id ev))))
 
-(with-bind ("profile-list" ev)
-  "Get all items of s single type from a profile."
-  (let* ((data (data ev))
-         (what (hget data "type")))
-    (let ((models (models (mget *profile* what))))
-      (trigger-remote (event "profile-list" :data models :uuid (id ev))))))
-
-(with-bind ("ping" ev)
-  (trigger-remote (event "pong" :uuid (id event))))
-
-(with-bind ("cmd" ev)
+(with-bind ("cmd" ev :response res)
   (case (intern (string-upcase (hget (data ev) "name")) :keyword)
+    ;; reload the turtl-core app
     (:reload
       (asdf:operate 'asdf:load-op :turtl-core)
       (trigger-remote (event "success:cmd:reload" :uuid (id ev))))
+
+    ;; tells the core where we are going to store data files
     (:set-data-directory
       ;; convert windows paths
       (let ((pruned (cl-ppcre:regex-replace-all "\\" (hget (data ev) "path") "/")))
-        (setf *data-directory* pruned)))))
+        (setf *data-directory* pruned)))
+
+    ;; wipe the local database file(s)
+    (:wipe-local-db
+      (unless (logged-in *user*)
+        (error "User not logged in."))
+      (let ((db-name (format nil "~a/core-~a.sqlite" *data-directory* (mid *user*))))
+        (logout *user*)
+        (when (probe-file db-name)
+          (delete-file db-name))
+        (trigger-remote (event "success:cmd:wipe-local-db" :uuid (id ev)))))
+
+    ;; test the work queue by blasting some jobs at it
+    (:test-work
+      (dotimes (i 99)
+        (alet* ((x (random 100))
+                (y (random 100))
+                (res (work (sleep .01) (+ x y))))
+          (format t "~a + ~a = ~a~%" x y res))))
+
+    ;; reload the main work queue
+    (:reload-queue
+      (stop-queue *main-queue*)
+      (setf *main-queue* (make-queue (get-num-cores))))
+
+    ;; stop the turtl-core thread
+    (:stop
+      (stop))))
 
 (defafun setup-db (future) ()
   (let ((db-name (format nil "~a/core-~a.sqlite" *data-directory* (mid *user*))))
@@ -77,6 +92,6 @@
 
 (defafun close-db (future) ()
   (when *db* (db-close *db*))
+  (setf *db* nil)
   (finish future t))
-  
 

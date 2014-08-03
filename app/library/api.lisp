@@ -23,7 +23,7 @@
           (return-from auth-main-jump))))
     auth-default))
 
-(defafun api (future) (method resource data &key headers progress-fn upload-progress-fn)
+(defafun api (future) (method resource &key data headers progress-fn upload-progress-fn)
   "Make an API call, finishes a future with the results."
   (declare (ignore progress-fn upload-progress-fn))
   (let* ((need-auth (api-auth-needed method resource))

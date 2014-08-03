@@ -73,7 +73,7 @@
           (signal-error future decrypted)
           (finish future decrypted)))))
 
-(defamethod mserialize (future) ((model protected) &key &allow-other-keys)
+(defamethod mserialize (future) ((model protected) &key (encrypt t) &allow-other-keys)
   (let ((data (call-next-method))
         (public-fields (public-fields model))
         (private-fields (private-fields model))

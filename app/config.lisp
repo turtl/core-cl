@@ -10,6 +10,9 @@
 (defvar *data-directory* "~/.turtl"
   "Holds our Turtl database and any other files associated with storage.")
 
+(defparameter *comm-url* "inproc://turtl"
+  "The nanomsg URL we use to talk to Turtl.")
+
 ;; api stuff
 (defparameter *api-url* "http://turtl.dev:8181/api")
 (defparameter *api-key* "")

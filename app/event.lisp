@@ -12,7 +12,7 @@
 
 (defvar *remote-forward-fn*
   (lambda (event)
-    (vom:debug2 "forwarding from remote to global: ~a" event)
+    (vom:debug "remote event fired: ~a" (ev event))
     ;; mark the event as a "remote" event before sending it off to *dispatch*
     (setf (gethash "remote" (meta event)) t)
     *dispatch*) 
@@ -75,6 +75,7 @@
   (event-glue:trigger event :dispatch dispatch))
 
 (defmacro with-bind ((event event-bind &key
+                            (response (gensym "response"))
                             (unique t)
                             (dispatch 'event-glue:*dispatch*))
                      &body body)
@@ -84,9 +85,12 @@
        (bind ,event-sym
          (lambda (,event-bind)
            (declare (ignorable ,event-bind))
-           (vom:debug "event fired: ~a" (ev ,event-bind))
            (future-handler-case
-             (progn ,@body)
+             (flet ((,response (&optional data)
+                      (let ((name (format nil "success:~a" (ev ,event-bind)))
+                            (id (id ,event-bind)))
+                        (trigger-remote (event name :data data :uuid id)))))
+               ,@body)
              (t (e)
                (vom:error "with-bind: ~a: ~a" ,event-sym e)
                (let ((msg (if (typep e 'turtl-error)
@@ -102,11 +106,8 @@
   (declare (optimize (speed 3) (safety 1))
            (type string event)
            (type turtl-dispatch dispatch))
-  (bt:with-lock-held ((dispatch-queue-lock dispatch))
-    (push event (dispatch-queue dispatch)))
-  ;; let the event loop know we got a message
-  (as:with-threading-context (:io nil)
-    (as:delay 'event-handler :time 0))
+  (push event (dispatch-queue dispatch))
+  (event-handler)
   nil)
 
 (defun event-handler (&key (dispatch *remote-dispatch*))
@@ -116,14 +117,30 @@
   (declare (optimize (speed 3) (safety 0) (debug 0))
            (type turtl-dispatch dispatch))
   (vom:debug4 "running event-handler")
-  (let ((events nil))
-    (bt:with-lock-held ((dispatch-queue-lock dispatch))
-      (when (dispatch-queue dispatch)
-        (setf events (copy-list (dispatch-queue dispatch)))
-        (setf (dispatch-queue dispatch) nil)))
+  (let ((events (dispatch-queue dispatch)))
+    (setf (dispatch-queue dispatch) nil)
     (when events
       (dolist (str (nreverse events))
         (let* ((event-hash (yason:parse str))
                (event (event-from-hash event-hash)))
           (trigger event :dispatch dispatch))))))
+
+;;; ----------------------------------------------------------------------------
+;;; event testing
+;;; ----------------------------------------------------------------------------
+(defvar *test-sock* nil)
+(defvar *test-conn* nil)
+(defun test-open ()
+  (let* ((sock (nn-socket nn:+nn-pair+))
+         (conn (nn-connect sock *comm-url*)))
+    (setf *test-sock* sock)
+    (setf *test-conn* conn)))
+
+(defun test-close ()
+  (nn:shutdown *test-sock* *test-conn*)
+  (nn:close *test-sock*))
+
+(defun test-send (event)
+  (let ((str (with-output-to-string (s) (yason:encode event s))))
+    (nn-send *test-sock* str :wait nil)))
 

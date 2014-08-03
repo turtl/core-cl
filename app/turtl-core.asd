@@ -15,8 +15,7 @@
     :depends-on ("package" "util" "config" "event")
     :serial t
     :components
-    ((:file "native")
-     (:file "remote")))
+    ((:file "remote")))
    (:module library
     :depends-on ("package" "util" "event")
     :serial t
@@ -53,7 +52,10 @@
     :depends-on ("package" "util" "event" library models)
     :serial t
     :components
-    ((:file "user")))
+    ((:file "user")
+     (:file "board")
+     (:file "note")
+     (:file "profile")))
    (:file "main" :depends-on ("package" comm "util" "event"))
    (:file "turtl" :depends-on ("package" "event" controllers models))))
 

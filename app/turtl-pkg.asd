@@ -6,11 +6,11 @@
   :depends-on (#:alexandria
                #:cl-async-future
                #:cl-async 
+               #:cl-nanomsg
                #:cl-hash-util
                #:static-vectors
                #:bordeaux-threads
                #:cl-nettle
-               #:lparallel
                #:event-glue
                #:sqlite-obj
                #:vom

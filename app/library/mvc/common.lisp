@@ -19,6 +19,11 @@
     "Serialize an MVC object (model/collection) into its basic types (hashes,
      lists, atoms)"))
 
+(defgeneric mdata (mvc-object)
+  (:documentation
+    "Gets the *raw data* for MVC objects, unlike mserialize which is more likely
+     to do some form of processing on the data."))
+
 (defgeneric mclear (mvc-object)
   (:documentation "Clear out a model/collection's data."))
 

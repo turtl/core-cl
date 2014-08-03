@@ -53,6 +53,9 @@
 (defmethod mserialize ((collection collection) &key &allow-other-keys)
   (mapcar 'mserialize (models collection)))
 
+(defmethod mdata ((collection collection))
+  (mapcar 'mdata (models collection)))
+
 (defmethod msort ((collection collection))
   (let ((sort-function (sort-function collection)))
     (when sort-function

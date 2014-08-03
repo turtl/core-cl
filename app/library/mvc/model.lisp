@@ -56,6 +56,9 @@
 (defmethod mserialize ((model model) &key &allow-other-keys)
   (data model))
 
+(defmethod mdata ((model model))
+  (data model))
+
 (defmethod mid ((model model) &optional strict)
   (let ((id (mget model "id")))
     (cond (id id)
