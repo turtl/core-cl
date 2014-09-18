@@ -10,6 +10,9 @@
              "shared")
             ("title"))
 
+(defclass boards (sync-collection)
+  ((model-type :accessor model-type :initform 'board)))
+
 (defun get-board-tags (board-id &key zero)
   (let* ((notes (mget *profile* "notes"))
          (tags (make-hash-table :test 'equal)))

@@ -3,6 +3,9 @@
 
 (in-package :turtl-core)
 
+(defvar *do-sync* t
+  "Whether or not to sync local data to/from the API.")
+
 (defvar *user* (make-instance 'user-db)
   "Holds the current user.")
 
@@ -12,7 +15,7 @@
 (defvar *keychain* nil
   "Holds the current user's keychain.")
 
-(defvar *sync* nil
+(defvar *sync* (make-instance 'sync-db)
   "Holds the sync model.")
 
 (defvar *messages* nil
@@ -85,6 +88,24 @@
     (setf *db* (db-open db-name))
     (apply-schema *db* *db-schema*)
     (finish future t)))
+
+(defun setup-syncing ()
+  "Setup the syncing API <--> DB <--> UI"
+  (sync-register-local "users" (create-collection 'users) 'user-db)
+  (sync-register-local "keychain" (create-collection 'keychain) 'keychain-entry-db)
+  (sync-register-local "personas" (create-collection 'personas) 'persona-db)
+  (sync-register-local "boards" (create-collection 'boards) 'board-db)
+  (sync-register-local "notes" (create-collection 'notes) 'note-db)
+  (sync-register-local "files" (create-collection 'files) 'file-db)
+
+  (sync-register-remote "users" (create-collection 'users) 'user-api)
+  (sync-register-remote "keychain" (create-collection 'keychain) 'keychain-entry-api)
+  (sync-register-remote "personas" (create-collection 'personas) 'persona-api)
+  (sync-register-remote "boards" (create-collection 'boards) 'board-api)
+  (sync-register-remote "notes" (create-collection 'notes) 'note-api)
+  (sync-register-remote "files" (create-collection 'files) 'file-api)
+
+  (start-sync))
 
 (defafun close-db (future) ()
   (when *db* (db-close *db*))

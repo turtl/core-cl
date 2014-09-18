@@ -18,6 +18,9 @@
              "embed"
              "color"))
 
+(defclass notes (sync-collection)
+  ((model-type :accessor model-type :initform 'note)))
+
 (defmethod find-key ((model note) keys &optional search)
   (let* ((board-id (mget model "board_id"))
          (board-key (ignore-errors (key (mfind (mget *profile* "boards") board-id)))))

@@ -16,6 +16,10 @@
   (let ((diff 2208988800))  ; (encode-universal-time 0 0 0 1 1 1970 0)
     (- (get-universal-time) diff)))
 
+(defun to-keyword (str)
+  "Convert a string into a keyword."
+  (intern (string-upcase str) :keyword))
+
 (defmacro def-async-function (type name (future-var &key (forward-errors t)) args &body body)
   "Define an asynchronous function with a returned future that will be finished
    when the function completes. Also has the option to forward all async errors

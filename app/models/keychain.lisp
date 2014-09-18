@@ -7,6 +7,9 @@
              "user_id")
             ("k"))
 
+(defclass keychain (sync-collection)
+  ((model-type :accessor model-type :initform 'keychain-entry)))
+
 (defmethod minit ((model keychain-entry))
   (setf (key model) (key *user*))
   (call-next-method))

@@ -5,6 +5,9 @@
             ("settings")
             ((logged-in :accessor logged-in :initform nil)))
 
+(defclass users (sync-collection)
+  ((model-type :accessor model-type :initform 'user)))
+
 (defun login (user)
   "Log the passed user in."
   (setf (logged-in user) t)

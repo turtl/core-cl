@@ -7,3 +7,6 @@
              "has_data")
             ("data"))
 
+(defclass files (sync-collection)
+  ((model-type :accessor model-type :initform 'file)))
+

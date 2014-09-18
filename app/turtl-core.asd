@@ -38,7 +38,9 @@
     :depends-on ("package" "util" "event" library)
     :serial t
     :components
-    ((:file "board")
+    ((:file "queue")
+     (:file "sync")
+     (:file "board")
      (:file "file")
      (:file "invite")
      (:file "keychain")
@@ -46,7 +48,6 @@
      (:file "note")
      (:file "persona")
      (:file "profile")
-     (:file "sync")
      (:file "user")))
    (:module controllers
     :depends-on ("package" "util" "event" library models)

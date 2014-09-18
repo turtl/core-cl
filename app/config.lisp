@@ -37,7 +37,14 @@
      :binary-data t
      :indexes (("note_id" . :id)
                ("synced" . :bool)
-               ("has_data" . :bool))))
+               ("has_data" . :bool)))
+    ;; kinda lame to jam the queue into the document-store, but it sort of fits
+    ;; due to the fact that jobs will be document data and we can still run
+    ;; custom queries on it (plus it can benefit from lossless schema upgrades).
+    ("queue"
+     :id :rowid
+     :indexes (("qid" . :integer)
+               ("grabbed" . :integer))))
   "Holds the local DB schema. This is really a table name and a set of indexes
    for that table. Anything else for each table is implemented as a JSON blob,
    effectively giving us an object store without th hassle of codifying every

@@ -11,8 +11,7 @@
         (create-collection 'collection))))
 
 (defmethod mdata ((model profile))
-  (hash ("keychain" (mdata (mget model "keychain")))
-        ("personas" (mdata (mget model "personas")))
+  (hash ("personas" (mdata (mget model "personas")))
         ("boards" (mdata (mget model "boards")))
         ("notes" #())))
   
