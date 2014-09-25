@@ -3,9 +3,6 @@
 
 (in-package :turtl-core)
 
-(defvar *do-sync* t
-  "Whether or not to sync local data to/from the API.")
-
 (defvar *user* (make-instance 'user-db)
   "Holds the current user.")
 

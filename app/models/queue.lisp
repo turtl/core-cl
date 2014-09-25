@@ -21,7 +21,7 @@
                    id ASC
                LIMIT 1 ")
          (job (car (sql-to-objects (dbc *db*) sql ts)))
-         (ts (timestamp)))
+         (ts (+ 30 (timestamp))))
     (when job
       (let ((id (gethash "id" job)))
         (sqlite:execute-non-query (dbc *db*)
@@ -31,6 +31,21 @@
         job))
     (sqlite:execute-non-query (dbc *db*) "COMMIT TRANSACTION")
     job))
+
+(defun requeue (job/id)
+  "Called when a job fails (requeues it)."
+  (let* ((id (if (hash-table-p job/id)
+                 (hget job/id "id")
+                 job/id))
+         (sql "UPDATE
+                   queue
+               SET
+                   grabbed = NULL,
+                   failed = failed + 1
+               WHERE
+                   id = ? "))
+    (sqlite:execute-non-query (dbc *db*) sql id)
+    id))
 
 (defun complete (job)
   "Mark a job as complete (delete it)."

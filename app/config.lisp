@@ -44,7 +44,8 @@
     ("queue"
      :id :rowid
      :indexes (("qid" . :integer)
-               ("grabbed" . :integer))))
+               ("grabbed" . :integer)
+               ("failed" . :integer))))
   "Holds the local DB schema. This is really a table name and a set of indexes
    for that table. Anything else for each table is implemented as a JSON blob,
    effectively giving us an object store without th hassle of codifying every
